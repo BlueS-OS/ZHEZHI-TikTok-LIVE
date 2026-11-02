@@ -20,6 +20,12 @@ const FALLBACK_EDGE_VOICES = [
 ];
 
 const SAPI_SCRIPT = path.join(import.meta.dirname, "sapi.ps1");
+const CACHE_RETENTION_MS = 30 * 60_000;
+const CACHE_PLAYBACK_GRACE_MS = 5 * 60_000;
+const CACHE_CHECK_MS = 5 * 60_000;
+const CACHE_MAX_FILES = 80;
+const CACHE_MAX_BYTES = 32 * 1024 * 1024;
+const GENERATED_AUDIO = /^voz-[a-f0-9]{20}(?:-respaldo)?\.(?:mp3|wav)(?:\.tmp|\.txt)?$/;
 
 export function cleanForSpeech(value, maxChars = 180) {
   let text = String(value ?? "")
@@ -73,30 +79,54 @@ export class VoiceEngine {
     this.voicesAt = 0;
     this.lastStart = 0;
     this.stopped = false;
+    this.lastCleanupAt = 0;
+    this.cleanupTimer = null;
+    this.cleanupBusy = false;
   }
 
   async init() {
     await fsp.mkdir(this.dir, { recursive: true });
-    const now = Date.now();
+    await this.cleanup();
+    clearInterval(this.cleanupTimer);
+    this.cleanupTimer = setInterval(() => this.cleanup().catch(() => {}), CACHE_CHECK_MS);
+    this.cleanupTimer.unref?.();
+  }
+
+  async cleanup() {
+    if (this.cleanupBusy) return;
+    this.cleanupBusy = true;
+    this.lastCleanupAt = Date.now();
     try {
       const files = await fsp.readdir(this.dir);
-      await Promise.all(
-        files.map(async (name) => {
-          const full = path.join(this.dir, name);
-          const stat = await fsp.stat(full).catch(() => null);
-          if (stat && now - stat.mtimeMs > 12 * 3600_000) {
-            await fsp.unlink(full).catch(() => {});
-          }
-        }),
-      );
+      const records = (await Promise.all(files.filter((name) => GENERATED_AUDIO.test(name)).map(async (name) => {
+        const filePath = path.join(this.dir, name);
+        const stat = await fsp.stat(filePath).catch(() => null);
+        return stat?.isFile() ? { filePath, mtimeMs: stat.mtimeMs, size: stat.size } : null;
+      }))).filter(Boolean).sort((a, b) => a.mtimeMs - b.mtimeMs);
+      let count = records.length;
+      let bytes = records.reduce((sum, file) => sum + file.size, 0);
+      for (const file of records) {
+        const age = Date.now() - file.mtimeMs;
+        if (age < CACHE_PLAYBACK_GRACE_MS) continue;
+        if (age < CACHE_RETENTION_MS && count <= CACHE_MAX_FILES && bytes <= CACHE_MAX_BYTES) continue;
+        const current = await fsp.stat(file.filePath).catch(() => null);
+        if (!current || current.mtimeMs !== file.mtimeMs) continue;
+        if (await fsp.unlink(file.filePath).then(() => true, () => false)) {
+          count -= 1;
+          bytes -= file.size;
+        }
+      }
     } catch {
       // La caché es prescindible.
+    } finally {
+      this.cleanupBusy = false;
     }
   }
 
   stop() {
     this.stopped = true;
     this.queue = [];
+    clearInterval(this.cleanupTimer);
   }
 
   /** Devuelve true si entra en la cola. */
@@ -172,6 +202,8 @@ export class VoiceEngine {
     const fileName = `voz-${key}.${ext}`;
     const filePath = path.join(this.dir, fileName);
     if (fs.existsSync(filePath)) {
+      await fsp.utimes(filePath, new Date(), new Date()).catch(() => {});
+      this.#maybeCleanup();
       return { fileName, filePath, provider, text: spoken };
     }
 
@@ -191,7 +223,7 @@ export class VoiceEngine {
          await fsp.unlink(fallbackPath).catch(() => {});
          throw new Error("La voz de Windows salió vacía");
        }
-       this.#trimCache().catch(() => {});
+        this.#maybeCleanup();
        return {
          fileName: fallbackName,
          filePath: fallbackPath,
@@ -207,7 +239,7 @@ export class VoiceEngine {
       await fsp.unlink(filePath).catch(() => {});
       throw new Error("La voz salió vacía");
     }
-    this.#trimCache().catch(() => {});
+    this.#maybeCleanup();
     return { fileName, filePath, provider, text: spoken };
   }
 
@@ -268,18 +300,8 @@ export class VoiceEngine {
     }
   }
 
-  async #trimCache() {
-    const files = await fsp.readdir(this.dir);
-    if (files.length <= 250) return;
-    const stats = await Promise.all(
-      files.map(async (name) => {
-        const full = path.join(this.dir, name);
-        const stat = await fsp.stat(full).catch(() => null);
-        return stat ? { full, mtimeMs: stat.mtimeMs } : null;
-      }),
-    );
-    const sorted = stats.filter(Boolean).sort((a, b) => a.mtimeMs - b.mtimeMs);
-    await Promise.all(sorted.slice(0, files.length - 200).map((f) => fsp.unlink(f.full).catch(() => {})));
+  #maybeCleanup() {
+    if (Date.now() - this.lastCleanupAt >= CACHE_CHECK_MS) this.cleanup().catch(() => {});
   }
 
   async listVoices() {
