@@ -4,6 +4,8 @@ Un estudio local para seguir el chat en vivo, anunciar eventos con voz y crear a
 
 **Chat en vivo · Voz · Alertas · Overlay · Moderación**
 
+Identidad visual inspirada en [Zhezhi2Uploader](https://github.com/BlueS-OS/Zhezhi2Uploader): su sello 折 y su paleta de tinta, malaquita y bermellón, adaptados a un panel oscuro.
+
 Zhezhi muestra comentarios y eventos del directo, anuncia seguidores y suscripciones y lee el chat en voz alta. El asistente funciona en tu PC; no modifica TikTok LIVE Studio. La conexión de lectura usa `tiktok-live-connector`, una integración no oficial que puede dejar de funcionar si TikTok cambia su servicio.
 
 ## Empezar en Windows

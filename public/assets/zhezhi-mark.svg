@@ -1,10 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
-  <path d="M16 72 62 13l4 39 37 14-47 39-12-31-28-2Z" fill="#F1E7D5"/>
-  <path d="m16 72 50-20-4-39L16 72Z" fill="#FF715D"/>
-  <path d="m16 72 50-20-22 22-28-2Z" fill="#E54648"/>
-  <path d="m66 52 37 14-59 8 22-22Z" fill="#EBC990"/>
-  <path d="m44 74 59-8-47 39-12-31Z" fill="#F6D2A0"/>
-  <path d="m44 74 12 31-40-33 28 2Z" fill="#C34646"/>
-  <path d="m62 13 4 39-20 8 16-47Z" fill="#FFF4DE"/>
-  <path d="m16 72 46-59 4 39 37 14-47 39-12-31-28-2Z" stroke="#271D37" stroke-width="2" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Zhezhi">
+  <rect width="64" height="64" rx="10" fill="#c8402c"/>
+  <rect x="3.5" y="3.5" width="57" height="57" rx="7.5" fill="none" stroke="#f7f2e8" stroke-opacity="0.28" stroke-width="1"/>
+  <text x="32" y="43" text-anchor="middle" font-size="30" font-family="Microsoft YaHei, SimSun, serif" fill="#f7f2e8">折</text>
 </svg>
