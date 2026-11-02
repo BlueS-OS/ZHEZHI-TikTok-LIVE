@@ -9,8 +9,8 @@ Zhezhi muestra comentarios y eventos del directo, anuncia seguidores y suscripci
 ## Empezar en Windows
 
 1. Descarga el proyecto con **Code → Download ZIP** en GitHub y extrae la carpeta. Instala [Node.js 20 o posterior](https://nodejs.org/) si aún no lo tienes.
-2. Dentro de la carpeta extraída, haz doble clic en **Instalar Zhezhi.bat**. Necesita Internet para instalar las dependencias; espera a que diga «Instalación completada». Si Node.js o npm faltan, el instalador te indicará qué hacer. Cierra Zhezhi antes de volver a usar el instalador para actualizar dependencias.
-3. Haz doble clic en **Iniciar Zhezhi.bat**. El panel estará en <http://127.0.0.1:5180/>. También puedes iniciar con `node server.js`.
+2. Dentro de la carpeta extraída, haz doble clic en **Iniciar Zhezhi.bat**. Si faltan dependencias, las instalará automáticamente (necesitas Internet la primera vez); si ya están, abrirá Zhezhi directamente. También puedes usar **Instalar Zhezhi.bat**: comprueba lo que falta y abre Zhezhi al terminar. No ejecutes el instalador durante un directo.
+3. El panel estará en <http://127.0.0.1:5180/>. También puedes iniciar con `node server.js` si ya instalaste las dependencias.
 4. Introduce tu usuario de TikTok en **Conexión** (sin `@`) y pulsa **Conectar** cuando estés en directo. Si no estás en vivo, utiliza **Modo demo** para comprobar las alertas y la voz.
    Si sale «No pude encontrar el Room ID», comprueba que `https://www.tiktok.com/@TUUSUARIO/live` se abre en una ventana privada mientras transmites. Si se abre, espera un minuto e inténtalo de nuevo: TikTok puede limitar las consultas de la integración no oficial. Si ya conoces el **Room ID numérico**, puedes introducirlo en Conexión para omitir esa búsqueda; no confundas el Room ID con tu usuario.
    Si aparece un error de firma, pulsa **Diagnosticar conexión** después del intento fallido. Mostrará si este proceso puede acceder a TikTok y a Euler Stream, además del tipo y código del último error, sin exponer tus cookies ni claves. Reinicia Zhezhi tras actualizar sus archivos para que aparezca esta opción.

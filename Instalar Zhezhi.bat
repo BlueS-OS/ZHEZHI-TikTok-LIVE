@@ -19,29 +19,34 @@ if errorlevel 1 (
 "%NODE%" -e "if (Number(process.versions.node.split('.')[0]) < 20) process.exit(1)"
 if errorlevel 1 goto :old_node
 
-set "NPM=npm.cmd"
-where npm.cmd >nul 2>nul
-if errorlevel 1 (
-  set "NPM=%ProgramFiles%\nodejs\npm.cmd"
-  if not exist "%ProgramFiles%\nodejs\npm.cmd" goto :missing_npm
+"%NODE%" -e "for (const name of ['ws', 'msedge-tts', 'tiktok-live-connector']) require.resolve(name)" >nul 2>nul
+if not errorlevel 1 goto :ready
+
+set "NPM="
+for /f "delims=" %%I in ('where npm.cmd 2^>nul') do if not defined NPM set "NPM=%%I"
+if not defined NPM (
+  if exist "%ProgramFiles%\nodejs\npm.cmd" set "NPM=%ProgramFiles%\nodejs\npm.cmd"
 )
+if not defined NPM goto :missing_npm
 
 echo Instalando dependencias. Esto puede tardar unos minutos...
 echo.
 if exist "package-lock.json" (
-  call "%NPM%" ci --no-audit --no-fund
+  call "%NPM%" ci --ignore-scripts --no-audit --no-fund
 ) else (
-  call "%NPM%" install --no-audit --no-fund
+  call "%NPM%" install --ignore-scripts --no-audit --no-fund
 )
 if errorlevel 1 goto :failed
+"%NODE%" -e "for (const name of ['ws', 'msedge-tts', 'tiktok-live-connector']) require.resolve(name)" >nul 2>nul
+if errorlevel 1 goto :failed
 
+:ready
 echo.
 echo ========================================
-echo  Instalacion completada.
-echo  Abre "Iniciar Zhezhi.bat" para empezar.
+echo  Dependencias listas. Abriendo Zhezhi...
 echo ========================================
-pause
-exit /b 0
+call "%~dp0Iniciar Zhezhi.bat"
+exit /b %errorlevel%
 
 :missing_node
 echo No encuentro Node.js. Instala la version LTS desde https://nodejs.org/
