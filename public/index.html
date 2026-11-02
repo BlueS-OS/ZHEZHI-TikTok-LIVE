@@ -335,12 +335,13 @@
           <div class="card">
             <div class="card-eyebrow">Contenido</div>
             <h2>Qué se muestra</h2>
-            <label class="switch"><input type="checkbox" data-setting="overlay.alerts"><span>Alertas de seguidores, subs y regalos</span></label>
+            <label class="switch"><input type="checkbox" data-setting="overlay.alerts"><span>Alertas de seguidores, subs, regalos y me gusta</span></label>
             <label class="switch"><input type="checkbox" data-setting="overlay.chat"><span>Chat en pantalla</span></label>
             <label class="switch"><input type="checkbox" data-setting="overlay.captions"><span>Subtítulos de la voz</span></label>
             <label class="switch"><input type="checkbox" data-setting="overlay.sound"><span>Sonidos de alerta</span></label>
             <label class="switch"><input type="checkbox" data-setting="overlay.showJoins"><span>Mostrar entradas al directo</span></label>
-            <label class="switch"><input type="checkbox" data-setting="overlay.showLikes"><span>Mostrar «me gusta»</span></label>
+            <label class="switch"><input type="checkbox" data-setting="overlay.showLikes"><span>Mostrar «me gusta» también en el chat</span></label>
+            <label class="switch"><input type="checkbox" data-setting="alerts.like"><span>Alerta de «me gusta» (máximo una cada 8 s)</span></label>
             <div class="row gap wrap top-gap">
               <label class="field inline">Mensajes en pantalla
                 <input type="number" min="1" max="40" data-setting="overlay.chatMax">
@@ -380,8 +381,8 @@
 
         <div class="card">
           <div class="card-eyebrow">Opcional · sin reemplazar la voz</div>
-          <h2>Audios para seguidores y regalos</h2>
-          <p class="hint">Al activar esta opción sonará tu archivo MP3 o WAV cuando te sigan o envíen un regalo. Zhezhi seguirá leyendo el aviso con la voz normalmente. Máximo 12 MB por archivo.</p>
+          <h2>Audios para seguidores, regalos y me gusta</h2>
+          <p class="hint">Al activar esta opción sonará el archivo MP3 o WAV del evento correspondiente, sin sustituir la voz. Los «me gusta» usan un audio distinto al de regalos. Máximo 12 MB por archivo.</p>
           <label class="switch big"><input type="checkbox" data-setting="customAudio.enabled"><span>Activar audios personalizados</span></label>
           <div class="grid two">
             <div>
@@ -402,13 +403,22 @@
               </div>
               <p class="hint" id="audio-gift-status">Sin audio cargado.</p>
             </div>
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="customAudio.like"><span>Al dar «me gusta»</span></label>
+              <input type="file" id="audio-like-file" accept=".mp3,.wav,audio/mpeg,audio/wav">
+              <div class="row gap top-gap">
+                <button class="btn tiny ghost" data-alert-play="like">Escuchar</button>
+                <button class="btn tiny ghost" data-alert-remove="like">Quitar</button>
+              </div>
+              <p class="hint" id="audio-like-status">Sin audio cargado.</p>
+            </div>
           </div>
           <div class="range-row top-gap">
             <label>Volumen del audio</label>
             <input type="range" min="0" max="100" step="5" data-setting="customAudio.volume">
             <output data-for="customAudio.volume">80%</output>
           </div>
-          <p class="hint">Prueba los botones «Seguidor» y «Regalo» de arriba. El audio suena en el overlay y, si tienes «Escuchar también en este panel» activado, también en el panel. Captura solo una de las dos fuentes de sonido para evitar duplicarlo.</p>
+          <p class="hint">Prueba «Seguidor», «Regalo» y «Me gusta» arriba. El audio suena en el overlay y, si tienes «Escuchar también en este panel» activado, también en el panel. Captura solo una de las dos fuentes de sonido para evitar duplicarlo.</p>
         </div>
       </section>
 

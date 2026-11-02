@@ -79,6 +79,7 @@ body {
 
 .alert-gift { --tone: #d9b970; }
 .alert-follow { --tone: #72c0a8; }
+.alert-like { --tone: #e58596; }
 .alert-subscribe { --tone: #88add2; }
 .alert-share { --tone: #b28ad8; }
 

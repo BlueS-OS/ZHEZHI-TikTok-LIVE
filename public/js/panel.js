@@ -1288,7 +1288,7 @@ function handleTts(tts) {
 function updateAlertAudio(files) {
   if (!files) return;
   store.alertAudio = files;
-  for (const kind of ["follow", "gift"]) {
+  for (const kind of ["follow", "gift", "like"]) {
     const exists = Boolean(files[kind]);
     $(`#audio-${kind}-status`).textContent = exists ? "Audio cargado y listo." : "Sin audio cargado.";
     $(`[data-alert-play="${kind}"]`).disabled = !exists;
@@ -1297,14 +1297,14 @@ function updateAlertAudio(files) {
 }
 
 function playAlertSound(sound) {
-  if (!sound?.url || !["follow", "gift"].includes(sound.kind)) return;
+  if (!sound?.url || !["follow", "gift", "like"].includes(sound.kind)) return;
   const audio = new Audio(sound.url);
   audio.volume = Math.min(1, Math.max(0, Number(sound.volume ?? 80) / 100));
   audio.play().catch(() => toast("No pude reproducir la alerta. Haz clic en el panel y vuelve a probar.", "warn"));
 }
 
 function bindAlertAudio() {
-  for (const kind of ["follow", "gift"]) {
+  for (const kind of ["follow", "gift", "like"]) {
     const input = $(`#audio-${kind}-file`);
     input.addEventListener("change", async () => {
       const file = input.files?.[0];

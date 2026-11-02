@@ -2,7 +2,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 
-export const AUDIO_KINDS = new Set(["follow", "gift"]);
+export const AUDIO_KINDS = new Set(["follow", "gift", "like"]);
 export const MAX_ALERT_AUDIO_BYTES = 12 * 1024 * 1024;
 
 export function audioExtension(bytes) {

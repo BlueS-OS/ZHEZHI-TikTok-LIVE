@@ -59,12 +59,14 @@ const DEFAULTS = {
     follow: true,
     subscribe: true,
     gift: true,
+    like: true,
     share: false,
   },
   customAudio: {
     enabled: false,
     follow: true,
     gift: true,
+    like: true,
     volume: 80,
   },
   tts: {
@@ -203,12 +205,14 @@ export function normalizeConfig(raw) {
       follow: bool(merged.alerts.follow, true),
       subscribe: bool(merged.alerts.subscribe, true),
       gift: bool(merged.alerts.gift, true),
+      like: bool(merged.alerts.like, true),
       share: bool(merged.alerts.share, false),
     },
     customAudio: {
       enabled: bool(merged.customAudio.enabled, false),
       follow: bool(merged.customAudio.follow, true),
       gift: bool(merged.customAudio.gift, true),
+      like: bool(merged.customAudio.like, true),
       volume: num(merged.customAudio.volume, 80, 0, 100),
     },
     tts: {

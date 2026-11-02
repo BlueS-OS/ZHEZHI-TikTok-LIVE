@@ -16,8 +16,9 @@ test("los audios personalizados están apagados por defecto y no cambian la voz"
   const config = defaultConfig();
   assert.equal(config.customAudio.enabled, false);
   assert.equal(config.tts.readAlerts, true);
-  const saved = normalizeConfig({ customAudio: { enabled: true, follow: false, gift: true, volume: 32 } });
-  assert.deepEqual(saved.customAudio, { enabled: true, follow: false, gift: true, volume: 32 });
+  const saved = normalizeConfig({ customAudio: { enabled: true, follow: false, gift: true, like: false, volume: 32 } });
+  assert.deepEqual(saved.customAudio, { enabled: true, follow: false, gift: true, like: false, volume: 32 });
+  assert.equal(normalizeConfig({}).alerts.like, true);
 });
 
 test("detecta WAV y MP3 por su contenido, no por el nombre", () => {
@@ -31,15 +32,16 @@ test("guarda archivos independientes, reemplaza formatos y los elimina", async (
   const dir = await mkdtemp(path.join(os.tmpdir(), "zhezhi-alerts-"));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const store = new AlertAudioStore(dir);
-  assert.deepEqual(store.urls(), { follow: null, gift: null });
+  assert.deepEqual(store.urls(), { follow: null, gift: null, like: null });
   await store.save("follow", wav);
   await store.save("gift", mp3);
-  assert.deepEqual(store.urls(), { follow: "/alert-audio/follow.wav", gift: "/alert-audio/gift.mp3" });
+  await store.save("like", wav);
+  assert.deepEqual(store.urls(), { follow: "/alert-audio/follow.wav", gift: "/alert-audio/gift.mp3", like: "/alert-audio/like.wav" });
   assert.deepEqual(await readFile(path.join(dir, "follow.wav")), wav);
   await store.save("follow", mp3);
-  assert.deepEqual(store.urls(), { follow: "/alert-audio/follow.mp3", gift: "/alert-audio/gift.mp3" });
+  assert.deepEqual(store.urls(), { follow: "/alert-audio/follow.mp3", gift: "/alert-audio/gift.mp3", like: "/alert-audio/like.wav" });
   await store.remove("gift");
-  assert.deepEqual(store.urls(), { follow: "/alert-audio/follow.mp3", gift: null });
+  assert.deepEqual(store.urls(), { follow: "/alert-audio/follow.mp3", gift: null, like: "/alert-audio/like.wav" });
 });
 
 test("rechaza archivos inválidos o demasiado grandes y tipos de evento desconocidos", async (t) => {
@@ -50,5 +52,5 @@ test("rechaza archivos inválidos o demasiado grandes y tipos de evento desconoc
   await assert.rejects(store.save("gift", Buffer.alloc(MAX_ALERT_AUDIO_BYTES + 1)), /12 MB/);
   await assert.rejects(store.save("subscribe", wav), /no válido/);
   await assert.rejects(store.remove("subscribe"), /no válido/);
-  assert.deepEqual(store.urls(), { follow: null, gift: null });
+  assert.deepEqual(store.urls(), { follow: null, gift: null, like: null });
 });

@@ -14,15 +14,14 @@ let config = {
     giftMinDiamonds: 1,
     durationMs: 6000,
   },
-  alerts: { follow: true, subscribe: true, gift: true, share: false },
-  customAudio: { enabled: false, follow: true, gift: true, volume: 80 },
+  alerts: { follow: true, subscribe: true, gift: true, like: true, share: false },
+  customAudio: { enabled: false, follow: true, gift: true, like: true, volume: 80 },
 };
 
 let ws = null;
 let wsRetry = 0;
 const alertQueue = [];
 let alertBusy = false;
-let lastLikeAt = 0;
 const ttsQueue = [];
 let ttsPlaying = false;
 let ttsFinishing = false;
@@ -175,10 +174,8 @@ function handleEvent(event) {
       if (config.overlay.showJoins) addChatLine(event);
       break;
     case "like":
-      if (config.overlay.showLikes && Date.now() - lastLikeAt > 8000) {
-        lastLikeAt = Date.now();
-        addChatLine(event);
-      }
+      if (config.overlay.showLikes) addChatLine(event);
+      if (visible("alerts") && config.alerts.like) pushAlert("like", event);
       break;
     case "gift":
       if (
@@ -221,7 +218,7 @@ async function runAlerts() {
 
 function showAlert({ kind, event }) {
   return new Promise((resolve) => {
-    const duration = Math.max(2000, Number(config.overlay.durationMs) || 6000);
+    const duration = kind === "like" ? 2000 : Math.max(2000, Number(config.overlay.durationMs) || 6000);
     const card = document.createElement("div");
     card.className = `alert alert-${kind}`;
     card.style.setProperty("--dur", `${duration}ms`);
@@ -230,7 +227,7 @@ function showAlert({ kind, event }) {
     art.className = `alert-art${kind === "gift" ? " is-gift" : ""}`;
     const image =
       kind === "gift" ? event.gift?.image : event.user?.avatar;
-    const emoji = kind === "gift" ? "🎁" : kind === "follow" ? "💛" : kind === "subscribe" ? "⭐" : "🔁";
+    const emoji = kind === "gift" ? "🎁" : kind === "follow" ? "💛" : kind === "subscribe" ? "⭐" : kind === "like" ? "❤️" : "🔁";
     if (image) {
       const img = document.createElement("img");
       img.src = image;
@@ -251,7 +248,7 @@ function showAlert({ kind, event }) {
     const eyebrow = document.createElement("div");
     eyebrow.className = "alert-eyebrow";
     eyebrow.textContent =
-      kind === "gift" ? "Regalo" : kind === "follow" ? "Nuevo seguidor" : kind === "subscribe" ? "Nueva suscripción" : "Ha compartido";
+      kind === "gift" ? "Regalo" : kind === "follow" ? "Nuevo seguidor" : kind === "subscribe" ? "Nueva suscripción" : kind === "like" ? "Me gusta" : "Ha compartido";
 
     const name = document.createElement("div");
     name.className = "alert-name";
@@ -268,6 +265,8 @@ function showAlert({ kind, event }) {
       detail.textContent = event.months > 1 ? `Se queda ${event.months} meses` : "Gracias por suscribirte";
     } else if (kind === "follow") {
       detail.textContent = "Gracias por seguir el directo";
+    } else if (kind === "like") {
+      detail.textContent = event.count > 1 ? `${event.count} me gusta` : "Le gusta el directo";
     } else {
       detail.textContent = "Gracias por difundirlo";
     }
@@ -304,6 +303,8 @@ function beep(kind) {
     const notes =
       kind === "gift"
         ? [523.25, 659.25, 783.99, 1046.5]
+        : kind === "like"
+          ? [659.25, 880]
         : kind === "subscribe"
           ? [523.25, 698.46, 880]
           : kind === "follow"
@@ -329,7 +330,7 @@ function beep(kind) {
 }
 
 function enqueueAlertSound(sound) {
-  if (preview || !["follow", "gift"].includes(sound.kind) || !sound.url) return;
+  if (preview || !["follow", "gift", "like"].includes(sound.kind) || !sound.url) return;
   if (soundQueue.length >= 4) soundQueue.shift();
   soundQueue.push(sound);
   playNextAlertSound();

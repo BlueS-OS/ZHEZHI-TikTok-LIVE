@@ -21,9 +21,9 @@ Zhezhi muestra comentarios y eventos del directo, anuncia seguidores y suscripci
    Los audios de voz en `cache/tts` son temporales: Zhezhi revisa la carpeta cada minuto, borra los archivos de más de 10 minutos y limita la caché a 30 archivos o 12 MB. Conserva al menos 2 minutos para que el panel y el overlay terminen de reproducirlos; durante ese margen puede superar los límites temporalmente. No afecta a los audios personalizados de `data/alerts`.
 6. En LIVE Studio, habilita la captura de audio del escritorio si quieres que los espectadores oigan a Zhezhi. Si tu versión permite añadir una página web como fuente, puedes copiar la URL del apartado **Overlay**. No captures el audio del panel y del overlay a la vez para evitar duplicados.
 
-### Audios opcionales de seguidores y regalos
+### Audios opcionales de seguidores, regalos y «me gusta»
 
-En **Overlay → Audios para seguidores y regalos**, carga por separado un MP3 o WAV (máximo 12 MB) para **Al seguir** y **Al donar un regalo**. Activa **Audios personalizados** para que suenen en el panel y el overlay cuando ocurra cada evento; puedes desactivar uno de los dos tipos o ajustar el volumen. Los botones **Escuchar** prueban el archivo aunque la opción esté desactivada; **Seguidor** y **Regalo** en Pruebas simulan el evento completo. Los archivos quedan en `data/alerts` en tu PC.
+En **Overlay → Audios para seguidores, regalos y me gusta**, carga por separado un MP3 o WAV (máximo 12 MB) para cada evento. Activa **Audios personalizados** para que suenen en el panel y el overlay; puedes desactivar cada tipo o ajustar el volumen. Los botones **Escuchar** prueban el archivo aunque la opción esté desactivada; **Seguidor**, **Regalo** y **Me gusta** en Pruebas simulan el evento completo. Los archivos quedan en `data/alerts` en tu PC. Los «me gusta» tienen su propia alerta visual y sonido, como máximo una vez cada 8 segundos para no saturar el directo.
 
 La función está desactivada por defecto. **No sustituye la lectura con voz**: Zhezhi seguirá anunciando seguidores y regalos si **Voz → Anunciar seguidores, subs y regalos** está activado. Si capturas panel y overlay al mismo tiempo, los sonidos se oirán duplicados; usa solo una fuente de audio.
 

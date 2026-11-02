@@ -26,6 +26,7 @@ import { Demo } from "./src/demo.js";
 import { checkService } from "./src/diagnostics.js";
 import { voiceStudioVoices } from "./src/voicestudio.js";
 import { AlertAudioStore, AUDIO_KINDS, MAX_ALERT_AUDIO_BYTES } from "./src/alert-audio.js";
+import { shouldAnnounceLike } from "./src/like-alert.js";
 
 const VERSION = "0.1.4";
 const PUBLIC_DIR = path.join(ROOT, "public");
@@ -48,6 +49,7 @@ let statsTimer = null;
 let actualPort = config.port;
 let autoReplyWarned = false;
 let wasConnected = false;
+let lastLikeAlertAt = 0;
 
 const manager = new TikTokManager(log);
 const voice = new VoiceEngine({ dir: TTS_DIR, log });
@@ -323,7 +325,19 @@ function handleEvent(raw, meta = {}) {
     reasons: [],
   };
 
-  if (["viewers", "like"].includes(event.kind)) {
+  if (event.kind === "like") {
+    applyEvent(stats, event);
+    scheduleStats();
+    const now = Date.now();
+    if (shouldAnnounceLike(lastLikeAlertAt, now)) {
+      lastLikeAlertAt = now;
+      broadcast({ type: "event", event });
+      playCustomAlert(event);
+    }
+    return;
+  }
+
+  if (event.kind === "viewers") {
     applyEvent(stats, event);
     scheduleStats();
     return;
@@ -423,7 +437,7 @@ async function handleApi(req, res, url) {
     return true;
   }
 
-  const audioRoute = /^\/api\/alert-audio\/(follow|gift)$/.exec(url.pathname);
+  const audioRoute = /^\/api\/alert-audio\/(follow|gift|like)$/.exec(url.pathname);
   if (audioRoute && ["POST", "DELETE"].includes(method)) {
     try {
       const files = method === "DELETE"
@@ -681,7 +695,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const alertFile = /^\/alert-audio\/(follow|gift)\.(mp3|wav)$/.exec(url.pathname);
+    const alertFile = /^\/alert-audio\/(follow|gift|like)\.(mp3|wav)$/.exec(url.pathname);
     if (alertFile) {
       const current = alertAudio.file(alertFile[1]);
       if (current?.ext === alertFile[2]) await serveFile(res, current.filePath);
