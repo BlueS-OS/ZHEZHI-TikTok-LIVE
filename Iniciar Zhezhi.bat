@@ -13,7 +13,7 @@ if not exist "%NODE%" (
   )
 )
 if not exist "node_modules\ws" (
-  echo Faltan las dependencias. Abre una terminal aqui y ejecuta npm install.
+  echo Faltan las dependencias. Ejecuta "Instalar Zhezhi.bat" primero.
   pause
   exit /b 1
 )

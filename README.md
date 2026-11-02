@@ -8,14 +8,15 @@ Zhezhi muestra comentarios y eventos del directo, anuncia seguidores y suscripci
 
 ## Empezar en Windows
 
-1. Instala Node.js 20 o posterior si aún no lo tienes. Si faltan dependencias, abre una terminal en esta carpeta y ejecuta `npm install`.
-2. Haz doble clic en **Iniciar Zhezhi.bat**. El panel estará en <http://127.0.0.1:5180/>. También puedes iniciar con `node server.js`.
-3. Introduce tu usuario de TikTok en **Conexión** (sin `@`) y pulsa **Conectar** cuando estés en directo. Si no estás en vivo, utiliza **Modo demo** para comprobar las alertas y la voz.
+1. Descarga el proyecto con **Code → Download ZIP** en GitHub y extrae la carpeta. Instala [Node.js 20 o posterior](https://nodejs.org/) si aún no lo tienes.
+2. Dentro de la carpeta extraída, haz doble clic en **Instalar Zhezhi.bat**. Necesita Internet para instalar las dependencias; espera a que diga «Instalación completada». Si Node.js o npm faltan, el instalador te indicará qué hacer. Cierra Zhezhi antes de volver a usar el instalador para actualizar dependencias.
+3. Haz doble clic en **Iniciar Zhezhi.bat**. El panel estará en <http://127.0.0.1:5180/>. También puedes iniciar con `node server.js`.
+4. Introduce tu usuario de TikTok en **Conexión** (sin `@`) y pulsa **Conectar** cuando estés en directo. Si no estás en vivo, utiliza **Modo demo** para comprobar las alertas y la voz.
    Si sale «No pude encontrar el Room ID», comprueba que `https://www.tiktok.com/@TUUSUARIO/live` se abre en una ventana privada mientras transmites. Si se abre, espera un minuto e inténtalo de nuevo: TikTok puede limitar las consultas de la integración no oficial. Si ya conoces el **Room ID numérico**, puedes introducirlo en Conexión para omitir esa búsqueda; no confundas el Room ID con tu usuario.
    Si aparece un error de firma, pulsa **Diagnosticar conexión** después del intento fallido. Mostrará si este proceso puede acceder a TikTok y a Euler Stream, además del tipo y código del último error, sin exponer tus cookies ni claves. Reinicia Zhezhi tras actualizar sus archivos para que aparezca esta opción.
-4. En **Voz**, deja activado **Escuchar también en este panel** para escuchar los mensajes en tu PC. Pulsa **Probar voz**; si el navegador bloquea el audio, haz clic en la página y vuelve a probar. Puedes cambiar el motor a **Windows (local)** si la voz Edge no está disponible.
+5. En **Voz**, deja activado **Escuchar también en este panel** para escuchar los mensajes en tu PC. Pulsa **Probar voz**; si el navegador bloquea el audio, haz clic en la página y vuelve a probar. Puedes cambiar el motor a **Windows (local)** si la voz Edge no está disponible.
    Si tienes **VoiceStudio** instalado, ábrelo primero, espera a que cargue su API local y elige **VoiceStudio (local, opcional)** en Motor. Pulsa **Detectar voces de VoiceStudio**, selecciona un perfil o deja la voz predeterminada y usa **Probar voz**. El puerto habitual es `3900`; `tts-1` usa el motor activo de VoiceStudio. Debes tener un modelo de voz instalado en VoiceStudio; Zhezhi no descarga modelos automáticamente. Si VoiceStudio falla, se usará la voz de Windows.
-5. En LIVE Studio, habilita la captura de audio del escritorio si quieres que los espectadores oigan a Zhezhi. Si tu versión permite añadir una página web como fuente, puedes copiar la URL del apartado **Overlay**. No captures el audio del panel y del overlay a la vez para evitar duplicados.
+6. En LIVE Studio, habilita la captura de audio del escritorio si quieres que los espectadores oigan a Zhezhi. Si tu versión permite añadir una página web como fuente, puedes copiar la URL del apartado **Overlay**. No captures el audio del panel y del overlay a la vez para evitar duplicados.
 
 ### Audios opcionales de seguidores y regalos
 
