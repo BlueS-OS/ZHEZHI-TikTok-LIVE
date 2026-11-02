@@ -131,7 +131,7 @@ function addChatLine(event) {
 
   const who = document.createElement("span");
   who.className = "who";
-  who.textContent = event.kind === "join" ? "+" : event.user?.name || "alguien";
+  who.textContent = event.user?.name || "alguien";
   who.style.setProperty("--hue", String(hash(event.user?.name || "alguien") % 360));
 
   const what = document.createElement("span");

@@ -205,6 +205,11 @@ body {
   color: hsl(var(--hue, 20) 62% 72%);
 }
 
+.chat-line.is-join .who::before {
+  content: "+ ";
+  color: #72c0a8;
+}
+
 .chat-line .what {
   color: #e5dfd4;
   min-width: 0;
