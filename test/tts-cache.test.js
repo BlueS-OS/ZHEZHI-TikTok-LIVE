@@ -32,14 +32,14 @@ test("limita el número de audios sin borrar los que podrían seguir sonando", a
   const dir = await mkdtemp(path.join(os.tmpdir(), "zhezhi-tts-"));
   const voice = new VoiceEngine({ dir });
   t.after(async () => { voice.stop(); await rm(dir, { recursive: true, force: true }); });
-  for (let i = 0; i < 82; i += 1) {
-    await fileAt(dir, `voz-${i.toString(16).padStart(20, "0")}.mp3`, 6);
+  for (let i = 0; i < 35; i += 1) {
+    await fileAt(dir, `voz-${i.toString(16).padStart(20, "0")}.mp3`, 3);
   }
   const recent = `voz-${"f".repeat(20)}.mp3`;
   await fileAt(dir, recent, 1);
   await voice.cleanup();
   const files = await readdir(dir);
-  assert.equal(files.length, 80);
+  assert.equal(files.length, 30);
   assert.ok(files.includes(recent));
 });
 
@@ -50,7 +50,7 @@ test("renueva la vida de un audio de voz reutilizado", async (t) => {
   const key = crypto.createHash("sha1")
     .update(JSON.stringify(["edge", undefined, undefined, undefined, undefined, undefined, undefined, undefined, "hola"]))
     .digest("hex").slice(0, 20);
-  const filePath = await fileAt(dir, `voz-${key}.mp3`, 29);
+  const filePath = await fileAt(dir, `voz-${key}.mp3`, 9);
   const result = await voice.synthesize("hola", { provider: "edge" });
   assert.equal(result.filePath, filePath);
   assert.ok(Date.now() - (await stat(filePath)).mtimeMs < 5000);

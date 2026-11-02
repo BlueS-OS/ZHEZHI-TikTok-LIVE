@@ -20,11 +20,11 @@ const FALLBACK_EDGE_VOICES = [
 ];
 
 const SAPI_SCRIPT = path.join(import.meta.dirname, "sapi.ps1");
-const CACHE_RETENTION_MS = 30 * 60_000;
-const CACHE_PLAYBACK_GRACE_MS = 5 * 60_000;
-const CACHE_CHECK_MS = 5 * 60_000;
-const CACHE_MAX_FILES = 80;
-const CACHE_MAX_BYTES = 32 * 1024 * 1024;
+const CACHE_RETENTION_MS = 10 * 60_000;
+const CACHE_PLAYBACK_GRACE_MS = 2 * 60_000;
+const CACHE_CHECK_MS = 60_000;
+const CACHE_MAX_FILES = 30;
+const CACHE_MAX_BYTES = 12 * 1024 * 1024;
 const GENERATED_AUDIO = /^voz-[a-f0-9]{20}(?:-respaldo)?\.(?:mp3|wav)(?:\.tmp|\.txt)?$/;
 
 export function cleanForSpeech(value, maxChars = 180) {
