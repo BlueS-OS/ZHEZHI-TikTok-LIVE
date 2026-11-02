@@ -2,6 +2,8 @@
 
 Un estudio local para seguir el chat en vivo, anunciar eventos con voz y crear alertas personalizadas para tu directo.
 
+**Chat en vivo · Voz · Alertas · Overlay · Moderación**
+
 Zhezhi muestra comentarios y eventos del directo, anuncia seguidores y suscripciones y lee el chat en voz alta. El asistente funciona en tu PC; no modifica TikTok LIVE Studio. La conexión de lectura usa `tiktok-live-connector`, una integración no oficial que puede dejar de funcionar si TikTok cambia su servicio.
 
 ## Empezar en Windows
