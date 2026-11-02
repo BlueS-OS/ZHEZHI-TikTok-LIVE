@@ -25,6 +25,7 @@ let alertBusy = false;
 let lastLikeAt = 0;
 const ttsQueue = [];
 let ttsPlaying = false;
+let ttsFinishing = false;
 let captionTimer = null;
 let audioContext = null;
 let alertAudio = { follow: null, gift: null };
@@ -389,26 +390,26 @@ function playNextTts() {
     return;
   }
   ttsPlaying = true;
+  ttsFinishing = false;
   audio.src = tts.url;
   audio.volume = Math.min(1, Math.max(0, Number(tts.volume ?? 100) / 100));
   showCaption(tts);
-  audio.play().catch(() => {
-    ttsPlaying = false;
-    playNextTts();
-  });
+  audio.play().catch(() => finishTts());
 }
 
-audio.addEventListener("ended", () => {
-  ttsPlaying = false;
-  captionTimer = setTimeout(hideCaption, 900);
-  playNextTts();
-});
+function finishTts() {
+  if (!ttsPlaying || ttsFinishing) return;
+  ttsFinishing = true;
+  // No iniciar otra voz en el mismo instante en que acaba la sílaba final.
+  setTimeout(() => {
+    ttsPlaying = false;
+    captionTimer = setTimeout(hideCaption, 900);
+    playNextTts();
+  }, audio.ended ? 250 : 0);
+}
 
-audio.addEventListener("error", () => {
-  ttsPlaying = false;
-  captionTimer = setTimeout(hideCaption, 900);
-  playNextTts();
-});
+audio.addEventListener("ended", finishTts);
+audio.addEventListener("error", finishTts);
 
 function showCaption(tts) {
   if (!visible("captions")) return;

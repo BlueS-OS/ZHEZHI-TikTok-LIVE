@@ -1374,9 +1374,15 @@ function playNextAudio() {
   store.audioPlaying = true;
   const audio = new Audio(item.url);
   audio.volume = Math.min(1, Math.max(0, Number(item.volume ?? 100) / 100));
+  let finished = false;
   const finish = () => {
-    store.audioPlaying = false;
-    playNextAudio();
+    if (finished) return;
+    finished = true;
+    // Deja respirar la última sílaba antes de que la siguiente voz la tape.
+    setTimeout(() => {
+      store.audioPlaying = false;
+      playNextAudio();
+    }, audio.ended ? 250 : 0);
   };
   audio.addEventListener("ended", finish);
   audio.addEventListener("error", () => {
