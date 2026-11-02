@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zhezhi · asistente para TikTok LIVE</title>
+  <meta name="theme-color" content="#151226">
+  <link rel="icon" type="image/svg+xml" href="/assets/zhezhi-mark.svg">
+  <link rel="stylesheet" href="/css/panel.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark"><img src="/assets/zhezhi-mark.svg" alt=""></span>
+      <div class="brand-text">
+        <strong>ZHEZHI</strong>
+        <small>tu directo, en sintonía</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item is-active" data-view="connect">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 3v4M15 3v4M7 7h10v5a5 5 0 0 1-10 0V7Z"/><path d="M12 17v4"/></svg>
+        <span>Conexión</span>
+      </button>
+      <button class="nav-item" data-view="chat">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+        <span>Chat</span>
+        <em class="nav-count" id="nav-chat-count">0</em>
+      </button>
+      <button class="nav-item" data-view="summary">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <span>Resumen</span>
+      </button>
+      <button class="nav-item" data-view="overlay">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
+        <span>Overlay</span>
+      </button>
+      <button class="nav-item" data-view="voice">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14"/></svg>
+        <span>Voz</span>
+      </button>
+      <button class="nav-item" data-view="replies">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 10 4 15l5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+        <span>Respuestas</span>
+      </button>
+      <button class="nav-item" data-view="moderation">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>Moderación</span>
+      </button>
+      <button class="nav-item" data-view="settings">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+        <span>Ajustes</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="side-status">
+        <span class="dot" id="side-dot"></span>
+        <span id="side-status">Desconectado</span>
+      </div>
+      <small>v0.1.4 · solo en tu PC</small>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="top-left">
+        <span class="pill" id="status-pill"><i></i><span id="status-text">Desconectado</span></span>
+        <span class="top-user" id="top-user"></span>
+      </div>
+      <div class="top-right">
+        <span class="uptime" id="uptime"></span>
+        <button class="btn ghost small" id="btn-demo">Modo demo</button>
+        <a class="btn ghost small" href="/overlay.html" target="_blank" rel="noreferrer">Abrir overlay</a>
+      </div>
+    </header>
+
+    <div class="views">
+
+      <!-- ============================ CONEXIÓN ============================ -->
+      <section class="view is-active" id="view-connect">
+        <div class="welcome-hero">
+          <div class="welcome-copy">
+            <span class="welcome-kicker"><i></i> TU ESTUDIO EN VIVO <span>·</span> ZHEZHI</span>
+            <h1>Haz que cada voz <em>cuente.</em></h1>
+            <p>Tu chat, tus alertas, tu comunidad. Todo fluye en un mismo lugar mientras tú te dedicas a crear.</p>
+            <div class="welcome-points"><span>✦ Chat en tiempo real</span><span>✦ Voz y alertas a tu manera</span></div>
+          </div>
+          <div class="welcome-art" aria-hidden="true">
+            <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span>
+            <span class="art-spark spark-one">✦</span><span class="art-spark spark-two">✧</span>
+            <img src="/assets/zhezhi-mark.svg" alt="">
+            <span class="art-caption">Plegado para tu directo</span>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card hero-card">
+            <div class="card-eyebrow">TikTok LIVE</div>
+            <h2>Conectar a tu directo</h2>
+            <label class="field" for="username-input">Usuario de TikTok</label>
+            <div class="input-prefix">
+              <span>@</span>
+              <input id="username-input" data-setting="tiktok.username" autocomplete="off" spellcheck="false" placeholder="tuusuario">
+            </div>
+            <label class="field" for="room-id-input">Room ID numérico (opcional)</label>
+            <input id="room-id-input" data-setting="tiktok.roomId" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Vacío: buscar automáticamente">
+            <div class="row gap">
+              <button class="btn primary" id="btn-connect">Conectar</button>
+              <button class="btn ghost" id="btn-disconnect" hidden>Desconectar</button>
+            </div>
+            <p class="hint">Tiene que ser el usuario que está emitiendo. Si TikTok no permite encontrar su sala automáticamente, puedes introducir el Room ID numérico; no es tu nombre de usuario.</p>
+            <div class="alert warn" id="connect-error" hidden></div>
+            <button class="btn ghost small" id="btn-diagnose">Diagnosticar conexión</button>
+            <div class="alert warn" id="diagnostic-result" hidden></div>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Sesión actual</div>
+            <h2>Ahora mismo</h2>
+            <div class="mini-stats">
+              <div><strong data-stat="viewers">0</strong><span>espectadores</span></div>
+              <div><strong data-stat="messages">0</strong><span>mensajes</span></div>
+              <div><strong data-stat="follows">0</strong><span>seguidores</span></div>
+              <div><strong data-stat="subs">0</strong><span>suscripciones</span></div>
+              <div><strong data-stat="diamonds">0</strong><span>diamantes</span></div>
+              <div><strong data-stat="likes">0</strong><span>me gusta</span></div>
+            </div>
+            <div class="session-line">
+              <span id="session-room">Sin sala</span>
+              <button class="btn tiny ghost" id="btn-reset-session">Reiniciar contadores</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Sin estar en directo</div>
+            <h2>Modo demo</h2>
+            <p class="hint">Genera mensajes, regalos y seguidores falsos para probar la voz y el overlay antes de emitir.</p>
+            <div class="row gap">
+              <button class="btn" id="btn-demo-start">Activar demo</button>
+              <button class="btn ghost" id="btn-demo-stop" hidden>Parar demo</button>
+            </div>
+            <div class="chips spaced" id="demo-chips">
+              <button class="chip" data-demo="chat">Probar chat</button>
+              <button class="chip" data-demo="gift">Probar regalo</button>
+              <button class="chip" data-demo="follow">Probar seguidor</button>
+              <button class="chip" data-demo="subscribe">Probar sub</button>
+              <button class="chip" data-demo="question">Probar pregunta</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Puesta a punto</div>
+            <h2>Antes de emitir</h2>
+            <ol class="steps">
+              <li><strong>Conecta</strong> con tu usuario y comprueba que aparece «En vivo».</li>
+              <li><strong>Abre Zhezhi</strong> en tu navegador y activa «Escuchar también en este panel» en Voz para oírla en tu PC.</li>
+              <li><strong>En TikTok LIVE Studio</strong>, captura el audio del escritorio si quieres que la voz llegue al directo. Si tu versión admite una fuente de página web, puedes añadir la URL del overlay.</li>
+              <li><strong>Prueba la voz</strong> y decide si quieres que lea el chat, los regalos o solo las preguntas.</li>
+              <li><strong>Revisa las respuestas</strong> y la moderación; por defecto solo sugiere, no escribe.</li>
+            </ol>
+            <p class="hint">Evita reproducir a la vez el audio del panel y el del overlay en la transmisión: se escucharía duplicado.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== CHAT ============================== -->
+      <section class="view" id="view-chat">
+        <div class="view-head row space">
+          <div>
+            <h1>Chat en vivo</h1>
+            <p>Todo lo que pasa en tu directo, con las respuestas que el copiloto propone.</p>
+          </div>
+          <div class="row gap">
+            <label class="switch"><input type="checkbox" id="chat-autoscroll" checked><span>Auto-scroll</span></label>
+            <button class="btn ghost small" id="btn-clear-chat">Limpiar vista</button>
+          </div>
+        </div>
+
+        <div class="stats-strip">
+          <div><span data-stat="viewers">0</span><small>espectadores</small></div>
+          <div><span data-stat="messages">0</span><small>mensajes</small></div>
+          <div><span data-stat="follows">0</span><small>seguidores</small></div>
+          <div><span data-stat="subs">0</span><small>subs</small></div>
+          <div><span data-stat="diamonds">0</span><small>diamantes</small></div>
+          <div><span data-stat="likes">0</span><small>me gusta</small></div>
+        </div>
+
+        <div class="chat-layout">
+          <div class="card chat-card">
+            <div class="chat-toolbar">
+              <div class="segmented" id="chat-filters">
+                <button class="is-active" data-filter="all">Todo</button>
+                <button data-filter="chat">Chat</button>
+                <button data-filter="gift">Regalos</button>
+                <button data-filter="new">Nuevos</button>
+                <button data-filter="hidden">Ocultos</button>
+              </div>
+              <input class="search" id="chat-search" placeholder="Buscar en el chat…" autocomplete="off">
+            </div>
+            <div class="chat-feed" id="chat-feed">
+              <div class="empty" id="chat-empty">
+                <strong>El chat está en silencio</strong>
+                <span>Conecta tu directo o activa el modo demo para verlo aquí.</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="card suggestions-card">
+            <div class="suggestions-head">
+              <div>
+                <div class="card-eyebrow">Copiloto</div>
+                <h2>Respuestas</h2>
+              </div>
+              <span class="badge" id="reply-mode-badge">Sugerir</span>
+            </div>
+            <p class="hint" id="reply-mode-hint">Se muestran aquí para que las pegues tú. Se pueden enviar solas en Respuestas.</p>
+            <div class="suggestions" id="suggestions">
+              <div class="empty small"><span>Aún no hay sugerencias.</span></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============================= RESUMEN ============================= -->
+      <section class="view" id="view-summary">
+        <div class="view-head row space">
+          <div>
+            <h1>Resumen del chat</h1>
+            <p>Qué se está hablando, qué preguntan y quién está empujando el directo.</p>
+          </div>
+          <div class="row gap">
+            <label class="field inline">Ventana
+              <select data-setting="summary.windowMinutes" id="summary-window">
+                <option value="5">5 min</option>
+                <option value="10">10 min</option>
+                <option value="20">20 min</option>
+                <option value="60">1 hora</option>
+              </select>
+            </label>
+            <button class="btn" id="btn-summary">Actualizar</button>
+            <button class="btn primary" id="btn-summary-ai">Analizar con IA</button>
+          </div>
+        </div>
+
+        <div class="stat-grid" id="summary-totals">
+          <div><strong>—</strong><small>mensajes / min</small></div>
+          <div><strong>—</strong><small>personas activas</small></div>
+          <div><strong>—</strong><small>seguidores</small></div>
+          <div><strong>—</strong><small>suscripciones</small></div>
+          <div><strong>—</strong><small>diamantes</small></div>
+          <div><strong>—</strong><small>ocultos</small></div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Para responder</div>
+            <h2>Preguntas del chat</h2>
+            <div class="list" id="summary-questions"><div class="empty small"><span>Sin preguntas todavía.</span></div></div>
+          </div>
+          <div class="card">
+            <div class="card-eyebrow">Temas</div>
+            <h2>Palabras que más suenan</h2>
+            <div class="chips" id="summary-words"><span class="muted">—</span></div>
+          </div>
+          <div class="card">
+            <div class="card-eyebrow">Comunidad</div>
+            <h2>Más activos</h2>
+            <div class="list" id="summary-users"><div class="empty small"><span>Sin actividad.</span></div></div>
+          </div>
+          <div class="card">
+            <div class="card-eyebrow">Apoyo</div>
+            <h2>Regalos</h2>
+            <div class="list" id="summary-gifters"><div class="empty small"><span>Sin regalos.</span></div></div>
+          </div>
+        </div>
+
+        <div class="card ai-card" id="summary-ai-card" hidden>
+          <div class="row space">
+            <div>
+              <div class="card-eyebrow">Lectura del copiloto</div>
+              <h2>Qué está pasando</h2>
+            </div>
+            <button class="btn tiny ghost" id="btn-summary-ai-close">Cerrar</button>
+          </div>
+          <pre class="ai-output" id="summary-ai"></pre>
+        </div>
+      </section>
+
+      <!-- ============================= OVERLAY ============================ -->
+      <section class="view" id="view-overlay">
+        <div class="view-head">
+          <div>
+            <h1>Overlay para LIVE Studio u OBS</h1>
+            <p>Una capa transparente con alertas, chat y subtítulos. Se actualiza en vivo.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Fuente de navegador</div>
+            <h2>Copia la URL que quieras</h2>
+            <div class="url-row">
+              <label>Todo (alertas + chat + subtítulos)</label>
+              <div class="copy-row"><input readonly id="url-full"><button class="btn tiny" data-copy="url-full">Copiar</button></div>
+            </div>
+            <div class="url-row">
+              <label>Solo alertas</label>
+              <div class="copy-row"><input readonly id="url-alerts"><button class="btn tiny" data-copy="url-alerts">Copiar</button></div>
+            </div>
+            <div class="url-row">
+              <label>Solo chat</label>
+              <div class="copy-row"><input readonly id="url-chat"><button class="btn tiny" data-copy="url-chat">Copiar</button></div>
+            </div>
+            <div class="url-row">
+              <label>Solo subtítulos de voz</label>
+              <div class="copy-row"><input readonly id="url-clean"><button class="btn tiny" data-copy="url-clean">Copiar</button></div>
+            </div>
+            <p class="hint">Si LIVE Studio ofrece fuente de página web, pega la URL allí. Si no, deja Zhezhi abierto para escuchar la voz en el panel. En OBS: Fuentes → + → Navegador → pega la URL → 1920×1080.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Vista previa</div>
+            <h2>Así se ve</h2>
+            <div class="overlay-preview">
+              <iframe src="/overlay.html?preview=1" title="Vista previa del overlay" loading="lazy"></iframe>
+            </div>
+            <p class="hint">La vista previa se conecta al mismo directo. Si no hay eventos, usa los botones de prueba.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Contenido</div>
+            <h2>Qué se muestra</h2>
+            <label class="switch"><input type="checkbox" data-setting="overlay.alerts"><span>Alertas de seguidores, subs y regalos</span></label>
+            <label class="switch"><input type="checkbox" data-setting="overlay.chat"><span>Chat en pantalla</span></label>
+            <label class="switch"><input type="checkbox" data-setting="overlay.captions"><span>Subtítulos de la voz</span></label>
+            <label class="switch"><input type="checkbox" data-setting="overlay.sound"><span>Sonidos de alerta</span></label>
+            <label class="switch"><input type="checkbox" data-setting="overlay.showJoins"><span>Mostrar entradas al directo</span></label>
+            <label class="switch"><input type="checkbox" data-setting="overlay.showLikes"><span>Mostrar «me gusta»</span></label>
+            <div class="row gap wrap top-gap">
+              <label class="field inline">Mensajes en pantalla
+                <input type="number" min="1" max="40" data-setting="overlay.chatMax">
+              </label>
+              <label class="field inline">Duración alerta
+                <select data-setting="overlay.durationMs">
+                  <option value="4000">4 s</option>
+                  <option value="6000">6 s</option>
+                  <option value="8000">8 s</option>
+                  <option value="12000">12 s</option>
+                </select>
+              </label>
+              <label class="field inline">Regalo mínimo (diamantes)
+                <input type="number" min="0" max="100000" data-setting="overlay.giftMinDiamonds">
+              </label>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Pruebas</div>
+            <h2>Lanza una alerta falsa</h2>
+            <p class="hint">Sirve para colocar el overlay y ajustar tamaños sin esperar a que pase algo real.</p>
+            <div class="chips spaced">
+              <button class="chip" data-demo="follow">Seguidor</button>
+              <button class="chip" data-demo="gift">Regalo</button>
+              <button class="chip" data-demo="subscribe">Suscripción</button>
+              <button class="chip" data-demo="chat">Mensaje</button>
+              <button class="chip" data-demo="question">Pregunta</button>
+              <button class="chip" data-demo="like">Me gusta</button>
+            </div>
+            <div class="row gap top-gap">
+              <button class="btn ghost small" data-open-overlay="full">Abrir overlay completo</button>
+              <button class="btn ghost small" data-open-overlay="alerts">Abrir solo alertas</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-eyebrow">Opcional · sin reemplazar la voz</div>
+          <h2>Audios para seguidores y regalos</h2>
+          <p class="hint">Al activar esta opción sonará tu archivo MP3 o WAV cuando te sigan o envíen un regalo. Zhezhi seguirá leyendo el aviso con la voz normalmente. Máximo 12 MB por archivo.</p>
+          <label class="switch big"><input type="checkbox" data-setting="customAudio.enabled"><span>Activar audios personalizados</span></label>
+          <div class="grid two">
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="customAudio.follow"><span>Al seguir</span></label>
+              <input type="file" id="audio-follow-file" accept=".mp3,.wav,audio/mpeg,audio/wav">
+              <div class="row gap top-gap">
+                <button class="btn tiny ghost" data-alert-play="follow">Escuchar</button>
+                <button class="btn tiny ghost" data-alert-remove="follow">Quitar</button>
+              </div>
+              <p class="hint" id="audio-follow-status">Sin audio cargado.</p>
+            </div>
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="customAudio.gift"><span>Al donar un regalo</span></label>
+              <input type="file" id="audio-gift-file" accept=".mp3,.wav,audio/mpeg,audio/wav">
+              <div class="row gap top-gap">
+                <button class="btn tiny ghost" data-alert-play="gift">Escuchar</button>
+                <button class="btn tiny ghost" data-alert-remove="gift">Quitar</button>
+              </div>
+              <p class="hint" id="audio-gift-status">Sin audio cargado.</p>
+            </div>
+          </div>
+          <div class="range-row top-gap">
+            <label>Volumen del audio</label>
+            <input type="range" min="0" max="100" step="5" data-setting="customAudio.volume">
+            <output data-for="customAudio.volume">80%</output>
+          </div>
+          <p class="hint">Prueba los botones «Seguidor» y «Regalo» de arriba. El audio suena en el overlay y, si tienes «Escuchar también en este panel» activado, también en el panel. Captura solo una de las dos fuentes de sonido para evitar duplicarlo.</p>
+        </div>
+      </section>
+
+      <!-- ============================== VOZ =============================== -->
+      <section class="view" id="view-voice">
+        <div class="view-head">
+          <div>
+            <h1>Voz</h1>
+            <p>El copiloto lee lo que pasa en el chat con una voz natural. El audio va al overlay.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Lectura</div>
+            <h2>Cuándo hablar</h2>
+            <label class="switch big"><input type="checkbox" data-setting="tts.enabled"><span>Activar la voz</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tts.readChat"><span>Leer los comentarios del chat</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tts.readNickname"><span>Decir el nombre antes del mensaje</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tts.onlyQuestions"><span>Solo leer preguntas</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tts.skipCommands"><span>Ignorar comandos (!redes, !horario…)</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tts.readAlerts"><span>Anunciar seguidores, subs y regalos</span></label>
+            <div class="row gap wrap top-gap">
+              <label class="field inline">Máximo de caracteres
+                <input type="number" min="40" max="400" data-setting="tts.maxChars">
+              </label>
+              <label class="field inline">Espera entre frases (ms)
+                <input type="number" min="0" max="10000" step="100" data-setting="tts.minIntervalMs">
+              </label>
+              <label class="field inline">Cola máxima
+                <input type="number" min="1" max="50" data-setting="tts.maxQueue">
+              </label>
+            </div>
+            <button class="btn ghost small top-gap" id="btn-tts-fast">Priorizar voz en tiempo real</button>
+            <p class="hint">Reduce la espera y la longitud de los mensajes. Si el chat va muy rápido, salta comentarios antiguos para no hablar con retraso.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Motor</div>
+            <h2>Voz y carácter</h2>
+            <label class="field">Motor
+              <select data-setting="tts.provider" id="tts-provider">
+                <option value="edge">Edge (natural, necesita internet)</option>
+                <option value="sapi">Windows (local, sin internet)</option>
+                <option value="voicestudio">VoiceStudio (local, opcional)</option>
+              </select>
+            </label>
+            <label class="field">Voz
+              <select data-setting="tts.voice" id="tts-voice"><option value="es-ES-ElviraNeural">Elvira (es-ES)</option></select>
+            </label>
+            <label class="field">Voz local de Windows
+              <select data-setting="tts.sapiVoice" id="tts-sapi"><option value="Microsoft Helena Desktop">Helena (es-ES)</option></select>
+            </label>
+            <div id="voicestudio-controls">
+              <label class="field">Voz de VoiceStudio
+                <select data-setting="tts.voiceStudioVoice" id="tts-voicestudio-voice"><option value="default">Predeterminada</option></select>
+              </label>
+              <label class="field">Modelo de VoiceStudio
+                <input data-setting="tts.voiceStudioModel" placeholder="tts-1 (motor activo)">
+              </label>
+              <label class="field">Puerto local de VoiceStudio
+                <input type="number" min="1024" max="65535" data-setting="tts.voiceStudioPort">
+              </label>
+              <button class="btn ghost small" id="btn-voicestudio-voices">Detectar voces de VoiceStudio</button>
+              <p class="hint" id="voicestudio-status">Abre VoiceStudio y selecciona o instala un modelo antes de generar audio. Si falla, Zhezhi usa la voz de Windows.</p>
+            </div>
+            <div class="range-row">
+              <label>Velocidad</label>
+              <input type="range" min="-50" max="100" step="5" data-setting="tts.rate">
+              <output data-for="tts.rate">0%</output>
+            </div>
+            <div class="range-row">
+              <label>Volumen</label>
+              <input type="range" min="0" max="100" step="5" data-setting="tts.volume">
+              <output data-for="tts.volume">100%</output>
+            </div>
+            <label class="switch"><input type="checkbox" id="listen-here"><span>Escuchar también en este panel</span></label>
+            <p class="hint">Si Edge o VoiceStudio fallan, se usa la voz de Windows. Para LIVE Studio, activa «Escuchar también en este panel» y captura el audio del escritorio.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-eyebrow">Prueba</div>
+          <h2>Escúchala</h2>
+          <div class="row gap">
+            <input id="tts-preview-text" class="grow" value="Hola, bienvenidos al directo. Hoy jugamos un rato y leemos el chat.">
+            <button class="btn primary" id="btn-tts-test">Probar voz</button>
+            <button class="btn ghost" id="btn-tts-replay" hidden>Reproducir audio</button>
+          </div>
+          <div class="tts-status" id="tts-status"></div>
+        </div>
+      </section>
+
+      <!-- ============================ RESPUESTAS ========================== -->
+      <section class="view" id="view-replies">
+        <div class="view-head">
+          <div>
+            <h1>Respuestas</h1>
+            <p>Contesta automáticamente comandos y preguntas. Por defecto solo te las sugiere.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Modo</div>
+            <h2>Cómo responde</h2>
+            <label class="switch big"><input type="checkbox" data-setting="reply.enabled"><span>Activar respuestas</span></label>
+            <label class="field">Modo
+              <select data-setting="reply.mode" id="reply-mode">
+                <option value="suggest">Sugerir (tú pegas)</option>
+                <option value="auto">Enviar solo al chat</option>
+              </select>
+            </label>
+            <div class="row gap wrap">
+              <label class="field inline">Espera por usuario (s)
+                <input type="number" min="0" max="3600" data-setting="reply.cooldownSec">
+              </label>
+              <label class="field inline">Máximo por minuto
+                <input type="number" min="0" max="60" data-setting="reply.maxPerMinute">
+              </label>
+            </div>
+            <div class="alert warn" id="auto-warning" hidden>
+              Para enviar solo hacen falta una clave de Euler Stream y la cookie <code>sessionid</code> en Ajustes. Si faltan, se queda en sugerencia.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">IA opcional</div>
+            <h2>Responder preguntas nuevas</h2>
+            <label class="switch big"><input type="checkbox" data-setting="ai.enabled"><span>Usar IA cuando ninguna regla encaje</span></label>
+            <label class="field">URL compatible (OpenAI)
+              <input data-setting="ai.baseUrl" placeholder="https://api.openai.com/v1">
+            </label>
+            <div class="row gap wrap">
+              <label class="field grow">Modelo
+                <input data-setting="ai.model" placeholder="gpt-4o-mini">
+              </label>
+              <label class="field inline">Máx/min
+                <input type="number" min="0" max="30" data-setting="ai.maxPerMinute">
+              </label>
+            </div>
+            <label class="field">Clave (se queda en tu PC)
+              <div class="copy-row">
+                <input type="password" id="ai-key" placeholder="Sin clave">
+                <button class="btn tiny ghost" data-clear="ai">Borrar</button>
+              </div>
+            </label>
+            <label class="field">Estilo
+              <textarea rows="3" data-setting="ai.style"></textarea>
+            </label>
+            <p class="hint">Vale cualquier servidor compatible (OpenAI, Groq, Ollama, LM Studio…). Si es local, deja la clave vacía.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row space">
+            <div>
+              <div class="card-eyebrow">Comandos y frases</div>
+              <h2>Reglas</h2>
+            </div>
+            <button class="btn" id="btn-add-rule">Añadir regla</button>
+          </div>
+          <p class="hint">Se revisan de arriba abajo. La primera que encaje responde. Los comandos se activan con <code>!palabra</code>.</p>
+          <div class="rules" id="rules-list"></div>
+        </div>
+      </section>
+
+      <!-- =========================== MODERACIÓN =========================== -->
+      <section class="view" id="view-moderation">
+        <div class="view-head">
+          <div>
+            <h1>Moderación</h1>
+            <p>Filtra spam y mensajes que no quieres ni leer. Se ocultan en tu pantalla, no en TikTok.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Filtros</div>
+            <h2>Qué se oculta</h2>
+            <label class="switch big"><input type="checkbox" data-setting="moderation.enabled"><span>Activar moderación</span></label>
+            <label class="switch"><input type="checkbox" data-setting="moderation.blockLinks"><span>Ocultar enlaces</span></label>
+            <label class="switch"><input type="checkbox" data-setting="moderation.blockRepeats"><span>Ocultar mensajes repetidos</span></label>
+            <label class="switch"><input type="checkbox" data-setting="moderation.hideFromOverlay"><span>Ocultarlos también en el overlay y la voz</span></label>
+            <div class="row gap wrap top-gap">
+              <label class="field inline">Repetición en (s)
+                <input type="number" min="5" max="600" data-setting="moderation.repeatWindowSec">
+              </label>
+              <label class="field inline">Máx. emojis
+                <input type="number" min="0" max="100" data-setting="moderation.maxEmojis">
+              </label>
+              <label class="field inline">Máx. menciones
+                <input type="number" min="0" max="50" data-setting="moderation.maxMentions">
+              </label>
+            </div>
+            <div class="range-row">
+              <label>% de mayúsculas</label>
+              <input type="range" min="30" max="100" step="5" data-setting="moderation.maxCapsRatio" data-scale="100">
+              <output data-for="moderation.maxCapsRatio">75%</output>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Lista</div>
+            <h2>Palabras prohibidas</h2>
+            <textarea id="banned-words" rows="9" placeholder="Una por línea o separadas por comas"></textarea>
+            <p class="hint">Se comparan sin acentos ni mayúsculas, también dentro de otras palabras. No borra nada en TikTok: solo lo esconde aquí.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-eyebrow">Prueba</div>
+          <h2>Analizar un mensaje</h2>
+          <div class="row gap">
+            <input id="mod-test-text" class="grow" value="MIRA MI WEB gratis punto com">
+            <button class="btn" id="btn-mod-test">Analizar</button>
+          </div>
+          <div class="mod-result" id="mod-result"></div>
+        </div>
+      </section>
+
+      <!-- ============================= AJUSTES ============================ -->
+      <section class="view" id="view-settings">
+        <div class="view-head">
+          <div>
+            <h1>Ajustes</h1>
+            <p>Conexión avanzada, secretos y mantenimiento. Todo se guarda en <code>config.json</code>.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Conexión</div>
+            <h2>Comportamiento</h2>
+            <label class="switch"><input type="checkbox" data-setting="tiktok.autoConnect"><span>Conectar solo al arrancar</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tiktok.authenticateWs"><span>Autenticar el WebSocket (solo si vas a escribir)</span></label>
+            <p class="hint">La autenticación del WebSocket envía tus cookies al servicio de firma. Déjalo apagado si solo vas a leer.</p>
+            <div class="row gap top-gap">
+              <button class="btn ghost" id="btn-reload">Recargar ajustes</button>
+              <button class="btn danger" id="btn-reset-all">Reiniciar contadores</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Firma y sesión</div>
+            <h2>Para escribir en el chat</h2>
+            <label class="field">Clave de Euler Stream
+              <div class="copy-row">
+                <input type="password" id="sign-key" placeholder="Sin clave (límite gratuito)">
+                <button class="btn tiny ghost" data-clear="sign">Borrar</button>
+              </div>
+            </label>
+            <label class="field">Cookie <code>sessionid</code>
+              <input type="password" id="session-id" placeholder="No configurada" autocomplete="off">
+            </label>
+            <label class="field">Cookie <code>tt-target-idc</code>
+              <input id="tt-idc" placeholder="Ej.: useast1a" autocomplete="off">
+            </label>
+            <div class="row gap">
+              <button class="btn" id="btn-save-secrets">Guardar secretos</button>
+              <button class="btn ghost" data-clear="session">Borrar sesión</button>
+            </div>
+            <p class="hint">Se leen de las cookies de tiktok.com en tu navegador. Sin ambas cosas, las respuestas se quedan en sugerencia. <a href="https://www.eulerstream.com/" target="_blank" rel="noreferrer">Euler Stream</a></p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Overlay</div>
+            <h2>Enlaces</h2>
+            <p class="hint">El overlay se sirve en <code id="overlay-base"></code>. Si cambias el puerto, vuelve aquí a copiar las URLs.</p>
+            <div class="row gap wrap">
+              <button class="btn ghost small" data-open-overlay="full">Abrir completo</button>
+              <button class="btn ghost small" data-open-overlay="alerts">Solo alertas</button>
+              <button class="btn ghost small" data-open-overlay="chat">Solo chat</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Datos</div>
+            <h2>Privacidad</h2>
+            <ul class="plain">
+              <li>El servidor escucha solo en <code>127.0.0.1</code>.</li>
+              <li>Los eventos viven en memoria; el chat no se guarda en disco.</li>
+              <li><code>config.json</code> sí guarda tu sesión y claves: no lo compartas.</li>
+              <li>La voz usa Edge o Windows; el texto sale de tu equipo solo si eliges Edge.</li>
+            </ul>
+            <p class="hint">Versión <span id="version-label">0.1.4</span> · Node <span id="node-label">—</span></p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="toasts" id="toasts"></div>
+<script type="module" src="/js/panel.js"></script>
+</body>
+</html>

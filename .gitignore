@@ -1,0 +1,10 @@
+node_modules/
+cache/
+data/
+config.json
+.env
+.env.*
+*.pem
+*.key
+*.log
+.DS_Store

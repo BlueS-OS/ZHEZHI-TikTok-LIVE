@@ -1,0 +1,19 @@
+{
+  "name": "zhezhi",
+  "version": "0.1.4",
+  "private": true,
+  "type": "module",
+  "description": "Zhezhi: asistente local para TikTok LIVE Studio, chat, alertas y voz.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test"
+  },
+  "dependencies": {
+    "msedge-tts": "2.1.1",
+    "tiktok-live-connector": "2.5.0",
+    "ws": "8.22.1"
+  }
+}

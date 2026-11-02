@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Overlay · Zhezhi</title>
+  <link rel="stylesheet" href="/css/overlay.css">
+</head>
+<body>
+  <div class="alerts" id="alerts" aria-live="polite"></div>
+  <div class="chat" id="chat" aria-live="polite"></div>
+  <div class="captions" id="captions">
+    <span class="caption-user" id="caption-user"></span>
+    <span class="caption-text" id="caption-text"></span>
+  </div>
+  <audio id="player" preload="auto"></audio>
+  <audio id="alert-player" preload="auto"></audio>
+  <script type="module" src="/js/overlay.js"></script>
+</body>
+</html>
