@@ -318,6 +318,10 @@
               <label>Solo subtítulos de voz</label>
               <div class="copy-row"><input readonly id="url-clean"><button class="btn tiny" data-copy="url-clean">Copiar</button></div>
             </div>
+            <div class="url-row">
+              <label>Contador de «me gusta» (sin audio)</label>
+              <div class="copy-row"><input readonly id="url-likes"><button class="btn tiny" data-copy="url-likes">Copiar</button></div>
+            </div>
             <p class="hint">Si LIVE Studio ofrece fuente de página web, pega la URL allí. Si no, deja Zhezhi abierto para escuchar la voz en el panel. En OBS: Fuentes → + → Navegador → pega la URL → 1920×1080.</p>
           </div>
 
@@ -441,6 +445,8 @@
             <label class="switch"><input type="checkbox" data-setting="tts.onlyQuestions"><span>Solo leer preguntas</span></label>
             <label class="switch"><input type="checkbox" data-setting="tts.skipCommands"><span>Ignorar comandos (!redes, !horario…)</span></label>
             <label class="switch"><input type="checkbox" data-setting="tts.readAlerts"><span>Anunciar seguidores, subs y regalos</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tts.readLikes"><span>Leer quién da «me gusta» (máximo una vez cada 8 s)</span></label>
+            <label class="switch"><input type="checkbox" data-setting="tts.readJoins"><span>Dar la bienvenida con voz al entrar (máximo una vez cada 8 s)</span></label>
             <div class="row gap wrap top-gap">
               <label class="field inline">Máximo de caracteres
                 <input type="number" min="40" max="400" data-setting="tts.maxChars">

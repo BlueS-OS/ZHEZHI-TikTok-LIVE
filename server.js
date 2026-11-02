@@ -27,6 +27,7 @@ import { checkService } from "./src/diagnostics.js";
 import { voiceStudioVoices } from "./src/voicestudio.js";
 import { AlertAudioStore, AUDIO_KINDS, MAX_ALERT_AUDIO_BYTES } from "./src/alert-audio.js";
 import { shouldAnnounceLike } from "./src/like-alert.js";
+import { socialAnnouncement } from "./src/voice-announcements.js";
 
 const VERSION = "0.1.4";
 const PUBLIC_DIR = path.join(ROOT, "public");
@@ -50,6 +51,7 @@ let actualPort = config.port;
 let autoReplyWarned = false;
 let wasConnected = false;
 let lastLikeAlertAt = 0;
+let lastJoinSpeechAt = 0;
 
 const manager = new TikTokManager(log);
 const voice = new VoiceEngine({ dir: TTS_DIR, log });
@@ -83,6 +85,7 @@ function overlayUrls() {
     alerts: `${base}?chat=0&captions=0`,
     chat: `${base}?alerts=0&captions=0`,
     clean: `${base}?alerts=0&chat=0&captions=1`,
+    likes: `http://127.0.0.1:${actualPort}/likes.html`,
   };
 }
 
@@ -127,6 +130,8 @@ function resetSession(notify = true) {
   replyState.aiSent.length = 0;
   replyState.once.clear();
   autoReplyWarned = false;
+  lastLikeAlertAt = 0;
+  lastJoinSpeechAt = 0;
   if (notify) {
     broadcast({ type: "reset" });
     scheduleStats(true);
@@ -148,6 +153,10 @@ function speak(event) {
     if (t.onlyQuestions && !looksLikeQuestion(event.text)) return;
     if (t.skipCommands && event.text.trim().startsWith("!")) return;
     text = t.readNickname && event.user?.name ? `${event.user.name} dice: ${event.text}` : event.text;
+  } else if (event.kind === "like" && t.readLikes) {
+    text = socialAnnouncement(event);
+  } else if (event.kind === "join" && t.readJoins) {
+    text = socialAnnouncement(event);
   } else if (t.readAlerts && ["follow", "subscribe", "gift"].includes(event.kind)) {
     if (event.kind === "follow") text = `${event.user?.name || "Alguien"} te sigue`;
     if (event.kind === "subscribe") text = `${event.user?.name || "Alguien"} se ha suscrito`;
@@ -333,6 +342,7 @@ function handleEvent(raw, meta = {}) {
       lastLikeAlertAt = now;
       broadcast({ type: "event", event });
       playCustomAlert(event);
+      speak(event);
     }
     return;
   }
@@ -343,7 +353,7 @@ function handleEvent(raw, meta = {}) {
     return;
   }
 
-  if (event.kind === "join" && !config.overlay.showJoins) {
+  if (event.kind === "join" && !config.overlay.showJoins && !config.tts.readJoins) {
     return;
   }
 
@@ -366,7 +376,15 @@ function handleEvent(raw, meta = {}) {
   if (event.kind === "chat" || event.kind === "question") {
     considerReply(event);
   }
-  speak(event);
+  if (event.kind === "join") {
+    const now = Date.now();
+    if (config.tts.readJoins && now - lastJoinSpeechAt >= 8000) {
+      lastJoinSpeechAt = now;
+      speak(event);
+    }
+  } else {
+    speak(event);
+  }
 }
 
 /* ------------------------------------------------------------------ */

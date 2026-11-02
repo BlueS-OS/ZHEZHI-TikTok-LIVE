@@ -29,4 +29,6 @@ La función está desactivada por defecto. **No sustituye la lectura con voz**: 
 
 Para ver solo los avisos en pantalla, usa la URL **Solo alertas**. Para ver subtítulos sin chat ni alertas, usa **Solo subtítulos de voz**. Las respuestas al chat son sugerencias por defecto; para enviar mensajes automáticamente necesitas configurar las credenciales indicadas en **Ajustes**. No compartas `config.json`, pues puede contener claves o cookies.
 
+En **Voz → Cuándo hablar** puedes activar por separado la lectura de quien da «me gusta» y la bienvenida «Bienvenido, nombre» al entrar. Ambas opciones vienen apagadas y anuncian como máximo una persona de cada tipo cada 8 segundos para evitar retrasos. **Overlay → Contador de «me gusta»** da una URL independiente y sin audio para añadir como otra fuente de navegador en OBS; muestra el total en tiempo real y el último nombre anunciado. Para ver nombres en las entradas del chat, activa **Mostrar entradas al directo** y actualiza la fuente del overlay en OBS después del directo.
+
 Si el puerto 5180 está ocupado, cierra las otras ventanas de Zhezhi antes de volver a abrirlo. El programa no abre una segunda copia en otro puerto para evitar que el navegador quede conectado a una versión anterior.

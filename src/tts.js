@@ -138,6 +138,9 @@ export class VoiceEngine {
       this.queue = this.queue.filter((queued) => queued.kind !== "chat");
       this.queue.push(job);
     } else {
+      if (["join", "like"].includes(job.kind)) {
+        this.queue = this.queue.filter((queued) => queued.kind !== job.kind);
+      }
       const firstChat = this.queue.findIndex((queued) => queued.kind === "chat");
       this.queue.splice(firstChat < 0 ? this.queue.length : firstChat, 0, job);
     }
@@ -158,7 +161,7 @@ export class VoiceEngine {
     if (this.busy || this.stopped) return;
     const job = this.queue.shift();
     if (!job) return;
-    if (job.kind === "chat" && Date.now() - job.createdAt > 12000) {
+    if (["chat", "join", "like"].includes(job.kind) && Date.now() - job.createdAt > 12000) {
       this.#drain();
       return;
     }
@@ -169,7 +172,7 @@ export class VoiceEngine {
       if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
       this.lastStart = Date.now();
       const result = await this.synthesize(job.text, job.options);
-      if (job.kind !== "chat" || Date.now() - job.createdAt <= 20000) {
+      if (!["chat", "join", "like"].includes(job.kind) || Date.now() - job.createdAt <= 20000) {
         job.onReady?.(result);
       }
     } catch (error) {

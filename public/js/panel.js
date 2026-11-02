@@ -1352,7 +1352,7 @@ function bindAlertAudio() {
 }
 
 function enqueueAudio(url, volume = 100, kind = "test", sourceAt = Date.now()) {
-  if (kind === "chat" && Date.now() - sourceAt > 20000) return;
+  if (["chat", "join", "like"].includes(kind) && Date.now() - sourceAt > 20000) return;
   if (kind === "chat") store.audioQueue = store.audioQueue.filter((item) => item.kind !== "chat");
   const item = { url, volume, kind, sourceAt };
   const firstChat = store.audioQueue.findIndex((queued) => queued.kind === "chat");
@@ -1367,7 +1367,7 @@ function enqueueAudio(url, volume = 100, kind = "test", sourceAt = Date.now()) {
 function playNextAudio() {
   if (store.audioPlaying || !store.audioQueue.length) return;
   const item = store.audioQueue.shift();
-  if (item.kind === "chat" && Date.now() - item.sourceAt > 20000) {
+  if (["chat", "join", "like"].includes(item.kind) && Date.now() - item.sourceAt > 20000) {
     playNextAudio();
     return;
   }
@@ -1406,6 +1406,7 @@ function renderOverlayUrls() {
   $("#url-alerts").value = overlayUrls.alerts || "";
   $("#url-chat").value = overlayUrls.chat || "";
   $("#url-clean").value = overlayUrls.clean || "";
+  $("#url-likes").value = overlayUrls.likes || "";
 }
 
 function bindOverlay() {

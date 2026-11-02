@@ -361,7 +361,7 @@ for (const type of ["ended", "error"]) {
 
 function enqueueTts(tts) {
   if (!tts) return;
-  if (tts.kind === "chat" && Date.now() - (tts.sourceAt || Date.now()) > 20000) return;
+  if (["chat", "join", "like"].includes(tts.kind) && Date.now() - (tts.sourceAt || Date.now()) > 20000) return;
   if (preview) {
     showCaption(tts);
     captionTimer = setTimeout(hideCaption, 2800);
@@ -386,7 +386,7 @@ function enqueueTts(tts) {
 function playNextTts() {
   if (ttsPlaying || !ttsQueue.length) return;
   const tts = ttsQueue.shift();
-  if (tts.kind === "chat" && Date.now() - (tts.sourceAt || Date.now()) > 20000) {
+  if (["chat", "join", "like"].includes(tts.kind) && Date.now() - (tts.sourceAt || Date.now()) > 20000) {
     playNextTts();
     return;
   }
