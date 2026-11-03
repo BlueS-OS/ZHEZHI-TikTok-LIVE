@@ -14,6 +14,6 @@ test("las lecturas de me gusta y bienvenida están apagadas por defecto y son in
 test("la voz dice el nombre del usuario sin confundir entrada con me gusta", () => {
   const user = { name: "Luna" };
   assert.equal(socialAnnouncement({ kind: "join", user }), "Bienvenido, Luna");
-  assert.equal(socialAnnouncement({ kind: "like", user }), "A Luna le gusta el directo");
+  assert.equal(socialAnnouncement({ kind: "like", user }), "Luna le dio me gusta al directo");
   assert.equal(socialAnnouncement({ kind: "gift", user }), "");
 });

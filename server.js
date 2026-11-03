@@ -20,7 +20,7 @@ import {
 import { createReplyState, pickRule, registerReply, registerAi, shouldAskAi } from "./src/rules.js";
 import { applyEvent, createStats, statsSnapshot } from "./src/stats.js";
 import { buildSummary, summaryPrompt } from "./src/summary.js";
-import { VoiceEngine } from "./src/tts.js";
+import { VoiceEngine, chatSpeechText } from "./src/tts.js";
 import { TikTokManager } from "./src/tiktok.js";
 import { Demo } from "./src/demo.js";
 import { checkService } from "./src/diagnostics.js";
@@ -152,7 +152,7 @@ function speak(event) {
     if (!t.readChat || event.hidden) return;
     if (t.onlyQuestions && !looksLikeQuestion(event.text)) return;
     if (t.skipCommands && event.text.trim().startsWith("!")) return;
-    text = t.readNickname && event.user?.name ? `${event.user.name} dice: ${event.text}` : event.text;
+    text = chatSpeechText(event, t);
   } else if (event.kind === "like" && t.readLikes) {
     text = socialAnnouncement(event);
   } else if (event.kind === "join" && t.readJoins) {

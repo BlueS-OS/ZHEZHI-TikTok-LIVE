@@ -30,12 +30,21 @@ const GENERATED_AUDIO = /^voz-[a-f0-9]{20}(?:-respaldo)?\.(?:mp3|wav)(?:\.tmp|\.
 export function cleanForSpeech(value, maxChars = 180) {
   let text = String(value ?? "")
     .replace(/https?:\/\/\S+/gi, " ")
-    .replace(/@\w+/g, " ")
+    .replace(/@(\w+)/g, "$1")
     .replace(/\p{Extended_Pictographic}/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
   if (text.length > maxChars) text = `${text.slice(0, maxChars - 1).trim()}…`;
   return text;
+}
+
+export function chatSpeechText(event, { readNickname = true, maxChars = 180 } = {}) {
+  const message = cleanForSpeech(event.text, maxChars);
+  // Un comentario solo de emojis o enlaces no debe convertirse en «nombre dice».
+  if (!/[\p{L}\p{N}]/u.test(message)) return "";
+  if (!readNickname || !event.user?.name) return message;
+  const name = cleanForSpeech(event.user.name, Math.min(40, Math.floor(maxChars / 3)));
+  return name ? `${name} dice: ${message}` : message;
 }
 
 function runPowerShell(args, timeoutMs = 20000) {
