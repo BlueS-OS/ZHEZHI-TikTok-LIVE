@@ -1,3 +1,6 @@
+import { showAlertVideo } from "./alert-video.js";
+import { BOSS_MOBS, MOB_GROUPS, MOB_LABELS, SPECIAL_ACTIONS } from "./mob-catalog.js";
+
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -7,11 +10,15 @@ const store = {
   audioPlaying: false,
   lastTestAudio: null,
   alertAudio: { follow: null, gift: null },
+  alertVideo: { follow: null, gift: null, like: null },
+  previewStop: null,
+  activeAlertSounds: new Set(),
 };
 
 let config = null;
 let status = { state: "idle" };
 let stats = null;
+let votes = { a: 0, b: 0 };
 let events = [];
 let suggestions = [];
 let localRules = [];
@@ -26,6 +33,11 @@ let rulesSaveTimer = null;
 let feedFrame = null;
 let ttsStatusTimer = null;
 let connectBusy = false;
+let paused = false;
+let rehearsalTimer = null;
+let rehearsalResolve = null;
+let rehearsalStop = false;
+let rehearsalRunning = false;
 
 const STATUS = {
   idle: { label: "Desconectado", tone: "" },
@@ -97,6 +109,14 @@ function handleMessage(message) {
     case "settings":
       config = message.config;
       syncSettings();
+      renderMobRules();
+      renderInteractionVotes();
+      break;
+    case "interaction":
+      if (message.interaction?.kind === "vote") {
+        votes = message.interaction.votes;
+        renderInteractionVotes();
+      }
       break;
     case "suggestion":
       suggestions.unshift(message);
@@ -119,6 +139,8 @@ function handleMessage(message) {
       toast(message.text, message.level);
       break;
     case "reset":
+      votes = { a: 0, b: 0 };
+      renderInteractionVotes();
       events = [];
       suggestions = [];
       scheduleFeedRender();
@@ -133,6 +155,13 @@ function handleMessage(message) {
       break;
     case "alert-audio-files":
       updateAlertAudio(message.audio);
+      break;
+    case "alert-video-files":
+      updateAlertVideo(message.video);
+      break;
+    case "pause":
+      paused = Boolean(message.paused);
+      renderPause();
       break;
     case "pong":
     case "hello":
@@ -156,22 +185,238 @@ function applyState(data) {
   config = data.config;
   status = data.status || status;
   stats = data.stats || stats;
+  votes = data.votes || votes;
   events = (data.events || []).slice();
   suggestions = (data.suggestions || []).slice();
   reasonLabels = data.reasons || {};
   overlayUrls = data.overlayUrls || {};
   updateAlertAudio(data.alertAudio);
+  updateAlertVideo(data.alertVideo);
   syncSettings();
+  renderMobRules();
   renderStatus();
   renderStats();
+  renderInteractionVotes();
   scheduleFeedRender();
   renderSuggestions();
   renderOverlayUrls();
   updateDemoUi(Boolean(data.demo));
+  paused = Boolean(data.paused);
+  renderPause();
   $("#version-label").textContent = data.version || "0.1.4";
   $("#node-label").textContent = data.node || "—";
   const base = overlayUrls.full ? overlayUrls.full.replace("overlay.html", "") : `${location.origin}/`;
   $("#overlay-base").textContent = base;
+}
+
+function renderPause() {
+  const button = $("#btn-pause");
+  if (!button) return;
+  button.classList.toggle("is-paused", paused);
+  button.setAttribute("aria-pressed", paused ? "true" : "false");
+  button.title = paused
+    ? "Reanudar alertas, sonidos y voz (Alt+P)"
+    : "Pausar alertas, sonidos y voz (Alt+P)";
+  $("#pause-label").textContent = paused ? "Reanudar" : "Pausar";
+  document.body.classList.toggle("is-paused", paused);
+  if (paused) {
+    store.audioQueue.length = 0;
+    store.currentAudio?.pause();
+    store.currentAudio = null;
+    store.audioPlaying = false;
+    for (const sound of store.activeAlertSounds) { sound.pause(); sound.src = ""; }
+    store.activeAlertSounds.clear();
+    store.previewStop?.();
+    store.previewStop = null;
+  }
+}
+
+function renderInteractionVotes() {
+  const output = $("#interaction-votes");
+  if (output) output.textContent = `Votos: !a ${config?.interactions?.optionA || "A"} ${votes.a || 0} · !b ${config?.interactions?.optionB || "B"} ${votes.b || 0}`;
+}
+
+function renderMobRules() {
+  const list = $("#minecraft-mob-rules");
+  if (!list) return;
+  list.replaceChildren();
+  const message = $("#minecraft-rules-message");
+  const total = $("#minecraft-rule-total");
+  if (!config?.minecraft || !Array.isArray(config.minecraft.mobRules)) {
+    total.textContent = "— / 12 acciones";
+    message.textContent = "El servidor abierto aún no admite reglas de mobs. Detén el demo y reinicia Zhezhi para cargar la nueva versión.";
+    $("#btn-add-mob-rule").disabled = true;
+    return;
+  }
+  total.textContent = `${config.minecraft.mobRules.length} / 12 acciones`;
+  $("#btn-add-mob-rule").disabled = false;
+  if (!message.dataset.error) message.textContent = config.minecraft.mobRules.length ? "" : "Todavía no hay acciones. Pulsa «Crear acción» para empezar.";
+  for (const [index, rule] of config.minecraft.mobRules.entries()) {
+    const row = document.createElement("div");
+    row.className = "mob-rule";
+    row.dataset.id = rule.id;
+    row.dataset.enabled = rule.enabled ? "true" : "false";
+    row.innerHTML = `
+      <div class="mob-rule-head">
+        <div class="mob-rule-identity"><span class="mob-rule-number">${String(index + 1).padStart(2, "0")}</span><div><strong class="mob-rule-title"></strong><span class="mob-rule-caption"></span></div></div>
+        <label class="switch mob-rule-switch"><input type="checkbox" data-mob-field="enabled"><span>Regla activa</span></label>
+      </div>
+      <div class="grid two">
+        <label class="field">Evento<select data-mob-field="event"><option value="like">Me gusta</option><option value="gift">Regalo</option><option value="follow">Seguimiento</option><option value="chat">Comentario</option></select></label>
+        <label class="field">Mob<select data-mob-field="mob"></select></label>
+        <label class="field"><span class="mob-amount-label">Mobs por evento (máximo 20)</span><input type="number" min="1" max="20" step="1" data-mob-field="amount"></label>
+        <label class="field mob-threshold">Cantidad de likes / mínimo de diamantes<input type="number" min="1" max="100000" data-mob-field="threshold"></label>
+        <label class="field mob-chat-match">Comentarios<select data-mob-field="chatMatch"><option value="exact">Comentario exacto</option><option value="any">Cualquier comentario</option></select></label>
+        <label class="field mob-match">Nombre del regalo / comentario exacto<input maxlength="80" data-mob-field="match" placeholder="Vacío: cualquier regalo"></label>
+        <label class="field">Etiqueta del mob<select data-mob-field="label"><option value="viewer">Nombre del espectador</option><option value="comment">Texto del comentario</option><option value="none">Sin nombre</option></select></label>
+        <label class="field">Segundos entre apariciones<input type="number" min="3" max="3600" data-mob-field="cooldownSec"><small class="mob-boss-advice" hidden></small></label>
+      </div>
+      <div class="mob-rule-footer"><span>CONFIGURACIÓN DE ACCIÓN</span><button type="button" class="btn tiny ghost" data-mob-remove>Quitar regla</button></div>`;
+    const eventNames = { like: "Me gusta", gift: "Regalo", follow: "Seguimiento", chat: "Comentario" };
+    row.querySelector(".mob-rule-title").textContent = `${eventNames[rule.event] || "Evento"} → ${MOB_LABELS[rule.mob] || rule.mob}`;
+    row.querySelector(".mob-rule-caption").textContent = `${rule.amount || 1} ${Number(rule.amount) === 1 ? "mob" : "mobs"} por evento · ${rule.enabled ? "Activa" : "Apagada"}`;
+    const mobSelect = row.querySelector('[data-mob-field="mob"]');
+    for (const group of MOB_GROUPS) {
+      const optgroup = document.createElement("optgroup");
+      optgroup.label = group.label;
+      for (const mob of group.mobs) {
+        const option = document.createElement("option");
+        option.value = mob;
+        option.textContent = MOB_LABELS[mob];
+        optgroup.append(option);
+      }
+      mobSelect.append(optgroup);
+    }
+    const specialGroup = document.createElement("optgroup");
+    specialGroup.label = "Explosivos · solo mundos copiados";
+    for (const action of SPECIAL_ACTIONS) {
+      const option = document.createElement("option");
+      option.value = action;
+      option.textContent = MOB_LABELS[action];
+      specialGroup.append(option);
+    }
+    mobSelect.append(specialGroup);
+    for (const field of ["enabled", "event", "mob", "amount", "threshold", "chatMatch", "match", "label", "cooldownSec"]) {
+      const input = row.querySelector(`[data-mob-field="${field}"]`);
+      if (field === "enabled") input.checked = rule.enabled;
+      else input.value = rule[field] ?? (field === "chatMatch" ? "exact" : "");
+    }
+    const updateVisibility = () => {
+      const event = row.querySelector('[data-mob-field="event"]').value;
+      const boss = BOSS_MOBS.includes(row.querySelector('[data-mob-field="mob"]').value);
+      const special = SPECIAL_ACTIONS.includes(row.querySelector('[data-mob-field="mob"]').value);
+      row.querySelector(".mob-threshold").hidden = !["like", "gift"].includes(event);
+      row.querySelector(".mob-chat-match").hidden = event !== "chat";
+      row.querySelector(".mob-match").hidden = !["gift", "chat"].includes(event) || (event === "chat" && row.querySelector('[data-mob-field="chatMatch"]').value === "any");
+      row.querySelector('[data-mob-field="label"] option[value="comment"]').disabled = event !== "chat";
+      row.querySelector('[data-mob-field="match"]').placeholder = event === "chat" ? "Escribe el comentario exacto" : "Vacío: cualquier regalo";
+      row.querySelector('[data-mob-field="amount"]').max = boss ? "5" : "20";
+      row.querySelector(".mob-amount-label").textContent = boss ? "Jefes por evento (máximo 5)" : special ? "Explosivos por evento (máximo 20)" : "Mobs por evento (máximo 20)";
+      row.querySelector(".mob-boss-advice").textContent = boss ? "Para jefes se recomiendan 60 s o más." : "Para explosivos se recomiendan 30 s o más. TNT explota tras ~4 s; el cristal automático tras ~2 s.";
+      row.querySelector(".mob-boss-advice").hidden = !boss && !special;
+    };
+    updateVisibility();
+    row.addEventListener("change", async (event) => {
+      if (!event.target.matches("[data-mob-field]")) return;
+      const field = event.target.dataset.mobField;
+      if (field === "event" && event.target.value !== "chat" && row.querySelector('[data-mob-field="label"]').value === "comment") {
+        row.querySelector('[data-mob-field="label"]').value = "viewer";
+      }
+      const next = (config.minecraft.mobRules || []).map((item) => item.id === rule.id
+        ? { ...item, cooldownSec: field === "mob" && BOSS_MOBS.includes(event.target.value) && !BOSS_MOBS.includes(item.mob) ? 60
+            : field === "mob" && SPECIAL_ACTIONS.includes(event.target.value) && !SPECIAL_ACTIONS.includes(item.mob) ? 30 : item.cooldownSec,
+            [field]: event.target.type === "checkbox" ? event.target.checked : event.target.type === "number" ? Number(event.target.value) : event.target.value,
+            label: row.querySelector('[data-mob-field="label"]').value }
+        : item);
+      try {
+        const result = await savePatch({ minecraft: { mobRules: next } });
+        if (!result.config.minecraft.mobRules?.some((item) => item.id === rule.id)) throw new Error("El servidor no guardó la acción. Reinicia Zhezhi después de detener el demo.");
+        message.dataset.error = "";
+        renderMobRules();
+      } catch (error) { message.textContent = error.message; message.dataset.error = "true"; toast(error.message, "bad"); }
+    });
+    row.querySelector("[data-mob-remove]").addEventListener("click", async () => {
+      try {
+        const result = await savePatch({ minecraft: { mobRules: config.minecraft.mobRules.filter((item) => item.id !== rule.id) } });
+        if (result.config.minecraft.mobRules?.some((item) => item.id === rule.id)) throw new Error("El servidor no quitó la acción. Reinicia Zhezhi después de detener el demo.");
+        message.dataset.error = "";
+        renderMobRules();
+      } catch (error) { message.textContent = error.message; message.dataset.error = "true"; toast(error.message, "bad"); }
+    });
+    list.append(row);
+  }
+}
+
+function bindMobRules() {
+  const button = $("#btn-add-mob-rule");
+  const message = $("#minecraft-rules-message");
+  button.addEventListener("click", async () => {
+    const current = config?.minecraft?.mobRules || [];
+    if (current.length >= 12) { toast("Máximo 12 reglas", "warn"); return; }
+    const rule = { id: `mob-${crypto.randomUUID().slice(0, 8)}`, enabled: false, event: "gift", mob: "zombie", amount: 1, threshold: 1, chatMatch: "exact", match: "", label: "viewer", cooldownSec: 10 };
+    button.disabled = true;
+    try {
+      const result = await savePatch({ minecraft: { mobRules: [...current, rule] } });
+      if (!result.config.minecraft.mobRules?.some((item) => item.id === rule.id)) throw new Error("El servidor abierto todavía no guarda estas acciones. Detén el demo y reinicia Zhezhi.");
+      message.dataset.error = "";
+      renderMobRules();
+    } catch (error) { message.textContent = error.message; message.dataset.error = "true"; toast(error.message, "bad"); }
+    finally { button.disabled = false; }
+  });
+}
+
+async function refreshMinecraftStatus() {
+  if (activeView !== "minecraft") return;
+  try {
+    const result = await api("/api/minecraft/status");
+    const output = $("#minecraft-status");
+    const connection = output.closest(".minecraft-connection");
+    const label = $("#minecraft-connection-label");
+    const hasRules = Array.isArray(config?.minecraft?.mobRules);
+    const hasActions = (config?.interactions?.enabled && [config?.interactions?.likes, config?.interactions?.gifts, config?.interactions?.comments].some(Boolean)) || config?.minecraft?.mobRules?.some((rule) => rule.enabled);
+    connection.dataset.state = !hasRules ? "warning" : !result.connected ? "offline" : !result.enabled || result.paused || !hasActions ? "warning" : "ready";
+    label.textContent = !hasRules ? "Reinicia Zhezhi" : !result.connected ? "Sin conexión" : !result.enabled ? "Puente detectado" : result.paused ? "Acciones en pausa" : !hasActions ? "Sin acciones activas" : "Listo para jugar";
+    output.textContent = !hasRules
+      ? "Puente detectado, pero Zhezhi necesita reiniciarse para cargar el editor de mobs. Detén primero el demo."
+      : !result.connected
+      ? "Puente desconectado. Abre una instancia Fabric con el mod de Zhezhi y un mundo individual."
+      : !result.enabled ? "Minecraft detectado · activa Minecraft y al menos una acción o regla de mob."
+        : result.paused ? "Minecraft detectado · acciones pausadas."
+          : !hasActions
+            ? "Minecraft detectado, pero ninguna regla está activa. Marca corazones, regalos o votación arriba."
+          : "Minecraft detectado · listo para recibir acciones.";
+  } catch {
+    $("#minecraft-status").textContent = "No se pudo consultar el puente. Se reintentará automáticamente.";
+    $("#minecraft-connection-label").textContent = "Estado no disponible";
+    $("#minecraft-status").closest(".minecraft-connection").dataset.state = "offline";
+  }
+}
+
+setInterval(refreshMinecraftStatus, 5000);
+
+async function togglePause(force) {
+  const next = typeof force === "boolean" ? force : !paused;
+  try {
+    const data = await api("/api/pause", {
+      method: "POST",
+      body: JSON.stringify({ paused: next }),
+    });
+    paused = Boolean(data.paused);
+    renderPause();
+    toast(paused ? "Directo en pausa: alertas, sonidos y voz silenciados" : "Directo reanudado", paused ? "warn" : "good");
+  } catch (error) {
+    toast(error.message, "bad");
+  }
+}
+
+function bindPause() {
+  $("#btn-pause").addEventListener("click", () => togglePause());
+  document.addEventListener("keydown", (event) => {
+    if (event.altKey && !event.ctrlKey && !event.metaKey && event.key.toLowerCase() === "p") {
+      event.preventDefault();
+      togglePause();
+    }
+  });
 }
 
 function renderStatus() {
@@ -457,6 +702,7 @@ function bindConnection() {
 }
 
 async function resetSession() {
+  if (!confirm("¿Reiniciar los contadores y vaciar el historial de esta sesión? Esta acción no se puede deshacer.")) return;
   try {
     await api("/api/session/reset", { method: "POST", body: "{}" });
     events = [];
@@ -495,13 +741,72 @@ function bindDemo() {
       try {
         await api("/api/demo", {
           method: "POST",
-          body: JSON.stringify({ kind: chip.dataset.demo }),
+          body: JSON.stringify({ kind: chip.dataset.demo, tier: chip.dataset.demoTier || "" }),
         });
       } catch (error) {
         toast(error.message, "bad");
       }
     });
   }
+  $("#btn-rehearsal").addEventListener("click", runRehearsal);
+  $("#btn-rehearsal-stop").addEventListener("click", stopRehearsal);
+}
+
+function rehearsalWait(ms) {
+  return new Promise((resolve) => {
+    clearTimeout(rehearsalTimer);
+    rehearsalResolve = resolve;
+    rehearsalTimer = setTimeout(() => {
+      rehearsalTimer = null;
+      rehearsalResolve = null;
+      resolve();
+    }, ms);
+  });
+}
+
+async function runRehearsal() {
+  if (rehearsalRunning) return;
+  rehearsalRunning = true;
+  rehearsalStop = false;
+  $("#btn-rehearsal").disabled = true;
+  $("#btn-rehearsal-stop").hidden = false;
+  const steps = [
+    { kind: "follow" },
+    { kind: "gift", tier: "large" },
+    { kind: "subscribe" },
+    { kind: "like" },
+    { kind: "chat" },
+  ];
+  try {
+    for (const step of steps) {
+      if (rehearsalStop) break;
+      await api("/api/demo", {
+        method: "POST",
+        body: JSON.stringify(step),
+      });
+      await rehearsalWait(step.kind === "like" ? 1100 : 1800);
+    }
+    if (!rehearsalStop) toast("Secuencia de prueba terminada", "good");
+  } catch (error) {
+    toast(error.message, "bad");
+  } finally {
+    rehearsalRunning = false;
+    clearTimeout(rehearsalTimer);
+    rehearsalTimer = null;
+    rehearsalResolve = null;
+    $("#btn-rehearsal").disabled = false;
+    $("#btn-rehearsal-stop").hidden = true;
+  }
+}
+
+function stopRehearsal() {
+  rehearsalStop = true;
+  clearTimeout(rehearsalTimer);
+  rehearsalTimer = null;
+  const resolve = rehearsalResolve;
+  rehearsalResolve = null;
+  if (resolve) resolve();
+  toast("Prueba detenida");
 }
 
 async function setDemo(on) {
@@ -521,8 +826,9 @@ function updateDemoUi(active) {
   $("#btn-demo-start").dataset.active = active ? "1" : "0";
   $("#btn-demo-start").hidden = active;
   $("#btn-demo-stop").hidden = !active;
-  $("#btn-demo").textContent = active ? "Parar demo" : "Modo demo";
-  $("#btn-demo").classList.toggle("primary", active);
+  $("#demo-label").textContent = active ? "Parar demo" : "Modo demo";
+  $("#btn-demo").classList.toggle("is-demo-active", active);
+  $("#btn-demo").setAttribute("aria-pressed", String(active));
 }
 
 /* ------------------------------------------------------------------ */
@@ -706,7 +1012,19 @@ function renderFeed() {
 }
 
 function bindChat() {
-  $("#chat-autoscroll").addEventListener("change", () => renderFeed());
+  const filters = ["all", "chat", "gift", "new", "hidden"];
+  const savedFilter = localStorage.getItem("zhezhi.chatFilter");
+  if (filters.includes(savedFilter)) chatFilter = savedFilter;
+  for (const button of $$("#chat-filters button")) {
+    button.classList.toggle("is-active", button.dataset.filter === chatFilter);
+  }
+  const savedScroll = localStorage.getItem("zhezhi.autoscroll");
+  if (savedScroll === "0") $("#chat-autoscroll").checked = false;
+
+  $("#chat-autoscroll").addEventListener("change", () => {
+    localStorage.setItem("zhezhi.autoscroll", $("#chat-autoscroll").checked ? "1" : "0");
+    renderFeed();
+  });
   $("#btn-clear-chat").addEventListener("click", () => {
     events = [];
     renderFeed();
@@ -718,6 +1036,7 @@ function bindChat() {
   for (const button of $$("#chat-filters button")) {
     button.addEventListener("click", () => {
       chatFilter = button.dataset.filter;
+      localStorage.setItem("zhezhi.chatFilter", chatFilter);
       for (const sibling of $$("#chat-filters button")) {
         sibling.classList.toggle("is-active", sibling === button);
       }
@@ -991,6 +1310,70 @@ function bindSecrets() {
       }
     });
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Copia de seguridad                                                  */
+/* ------------------------------------------------------------------ */
+
+function bindBackup() {
+  $("#btn-export-config").addEventListener("click", async () => {
+    try {
+      const data = await api("/api/config/export");
+      const blob = new Blob([`${JSON.stringify(data, null, 2)}\n`], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `zhezhi-ajustes-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      $("#backup-status").textContent = "Configuración exportada sin secretos.";
+      toast("Copia exportada", "good");
+    } catch (error) {
+      toast(error.message, "bad");
+    }
+  });
+
+  $("#btn-import-config").addEventListener("click", () => $("#import-config-file").click());
+  $("#import-config-file").addEventListener("change", async () => {
+    const input = $("#import-config-file");
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast("El archivo es demasiado grande", "bad");
+      return;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(await file.text());
+    } catch {
+      toast("El archivo no es un JSON válido", "bad");
+      return;
+    }
+    const incoming = parsed?.config && typeof parsed.config === "object" ? parsed.config : parsed;
+    if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
+      toast("El archivo no contiene una configuración válida", "bad");
+      return;
+    }
+    if (!confirm("¿Importar esta configuración? Se reemplazarán las opciones actuales, pero se conservarán tus secretos.")) {
+      return;
+    }
+    try {
+      const data = await api("/api/config/import", {
+        method: "POST",
+        body: JSON.stringify({ config: incoming }),
+      });
+      config = data.config;
+      syncSettings();
+      $("#backup-status").textContent = "Configuración importada. Los secretos guardados se conservaron.";
+      toast("Configuración importada", "good");
+    } catch (error) {
+      toast(error.message, "bad");
+    }
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -1297,10 +1680,59 @@ function updateAlertAudio(files) {
 }
 
 function playAlertSound(sound) {
-  if (!sound?.url || !["follow", "gift", "like"].includes(sound.kind)) return;
+  if (paused || !sound?.url || !["follow", "gift", "like"].includes(sound.kind)) return;
   const audio = new Audio(sound.url);
   audio.volume = Math.min(1, Math.max(0, Number(sound.volume ?? 80) / 100));
-  audio.play().catch(() => toast("No pude reproducir la alerta. Haz clic en el panel y vuelve a probar.", "warn"));
+  store.activeAlertSounds.add(audio);
+  const cleanup = () => store.activeAlertSounds.delete(audio);
+  audio.addEventListener("ended", cleanup, { once: true });
+  audio.addEventListener("error", cleanup, { once: true });
+  audio.play().catch(() => { cleanup(); if (!paused) toast("No pude reproducir la alerta. Haz clic en el panel y vuelve a probar.", "warn"); });
+}
+
+function updateAlertVideo(files) {
+  if (!files) return;
+  store.alertVideo = files;
+  for (const kind of ["follow", "gift", "like"]) {
+    const exists = Boolean(files[kind]);
+    $(`#video-${kind}-status`).textContent = exists ? "Vídeo cargado y listo." : "Sin vídeo cargado.";
+    $(`[data-video-play="${kind}"]`).disabled = !exists;
+    $(`[data-video-remove="${kind}"]`).disabled = !exists;
+  }
+}
+
+function bindAlertVideo() {
+  for (const kind of ["follow", "gift", "like"]) {
+    const input = $(`#video-${kind}-file`);
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > 30 * 1024 * 1024) { toast("El vídeo supera los 30 MB", "bad"); input.value = ""; return; }
+      try {
+        const data = await api(`/api/alert-video/${kind}`, { method: "POST", body: file, headers: { "Content-Type": "application/octet-stream" } });
+        updateAlertVideo(data.video);
+        toast("Vídeo guardado", "good");
+      } catch (error) { toast(error.message, "bad"); }
+      input.value = "";
+    });
+    $(`[data-video-play="${kind}"]`).addEventListener("click", () => {
+      store.previewStop?.();
+      const url = store.alertVideo[kind];
+      if (url) store.previewStop = showAlertVideo(
+        $("#video-preview"), url, $(`[data-setting="customVideo.chroma"]`).value,
+        $(`[data-setting="customVideo.sound"]`).checked,
+      );
+    });
+    $(`[data-video-remove="${kind}"]`).addEventListener("click", async () => {
+      try {
+        store.previewStop?.();
+        const data = await api(`/api/alert-video/${kind}`, { method: "DELETE" });
+        updateAlertVideo(data.video);
+        toast("Vídeo quitado", "good");
+      } catch (error) { toast(error.message, "bad"); }
+    });
+  }
+  updateAlertVideo(store.alertVideo);
 }
 
 function bindAlertAudio() {
@@ -1352,6 +1784,7 @@ function bindAlertAudio() {
 }
 
 function enqueueAudio(url, volume = 100, kind = "test", sourceAt = Date.now()) {
+  if (paused && kind !== "test") return;
   if (["chat", "join", "like"].includes(kind) && Date.now() - sourceAt > 20000) return;
   if (kind === "chat") store.audioQueue = store.audioQueue.filter((item) => item.kind !== "chat");
   const item = { url, volume, kind, sourceAt };
@@ -1373,11 +1806,13 @@ function playNextAudio() {
   }
   store.audioPlaying = true;
   const audio = new Audio(item.url);
+  store.currentAudio = audio;
   audio.volume = Math.min(1, Math.max(0, Number(item.volume ?? 100) / 100));
   let finished = false;
   const finish = () => {
     if (finished) return;
     finished = true;
+    if (store.currentAudio === audio) store.currentAudio = null;
     // Deja respirar la última sílaba antes de que la siguiente voz la tape.
     setTimeout(() => {
       store.audioPlaying = false;
@@ -1407,6 +1842,11 @@ function renderOverlayUrls() {
   $("#url-chat").value = overlayUrls.chat || "";
   $("#url-clean").value = overlayUrls.clean || "";
   $("#url-likes").value = overlayUrls.likes || "";
+  $("#url-goal").value = overlayUrls.goal || "";
+  $("#url-goal-inline").value = overlayUrls.goal || "";
+  $("#url-top-both").value = overlayUrls.topBoth || "";
+  $("#url-top-likes").value = overlayUrls.topLikes || "";
+  $("#url-top-gifts").value = overlayUrls.topGifts || "";
 }
 
 function bindOverlay() {
@@ -1423,6 +1863,70 @@ function bindOverlay() {
       if (url) window.open(url, "_blank", "noopener");
     });
   }
+
+  const presets = {
+    classic: {
+      alertsPosition: "top-center",
+      chatPosition: "bottom-left",
+      captionsPosition: "bottom-center",
+      scale: 1,
+      safeArea: 24,
+      alertsWidth: 600,
+      chatWidth: 450,
+      chatSize: 15,
+      alertNameSize: 25,
+      captionSize: 21,
+    },
+    clean: {
+      alertsPosition: "top-right",
+      chatPosition: "bottom-left",
+      captionsPosition: "bottom-center",
+      scale: 0.92,
+      safeArea: 20,
+      alertsWidth: 540,
+      chatWidth: 400,
+      chatSize: 14,
+      alertNameSize: 22,
+      captionSize: 19,
+    },
+    compact: {
+      alertsPosition: "top-right",
+      chatPosition: "bottom-left",
+      captionsPosition: "bottom-center",
+      scale: 0.82,
+      safeArea: 16,
+      alertsWidth: 460,
+      chatWidth: 340,
+      chatSize: 12,
+      alertNameSize: 19,
+      captionSize: 16,
+    },
+    show: {
+      alertsPosition: "top-center",
+      chatPosition: "bottom-left",
+      captionsPosition: "bottom-center",
+      scale: 1.15,
+      safeArea: 34,
+      alertsWidth: 680,
+      chatWidth: 520,
+      chatSize: 17,
+      alertNameSize: 28,
+      captionSize: 24,
+    },
+  };
+
+  for (const button of $$("[data-preset]")) {
+    button.addEventListener("click", async () => {
+      const preset = presets[button.dataset.preset];
+      if (!preset) return;
+      try {
+        await savePatch({ overlay: preset });
+        toast(`Disposición «${button.textContent.trim()}» aplicada`, "good");
+      } catch (error) {
+        toast(error.message, "bad");
+      }
+    });
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -1431,24 +1935,61 @@ function bindOverlay() {
 
 function setView(name) {
   if (!config && name !== "connect") return;
+  if (!$(`#view-${name}`)) return;
   activeView = name;
   for (const button of $$(".nav-item")) {
-    button.classList.toggle("is-active", button.dataset.view === name);
+    const active = button.dataset.view === name;
+    button.classList.toggle("is-active", active);
+    if (active) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
+    if (active && window.matchMedia("(max-width: 900px)").matches) {
+      const nav = $(".nav");
+      nav.scrollTo({ left: button.offsetLeft - (nav.clientWidth - button.clientWidth) / 2, behavior: "smooth" });
+    }
   }
   for (const view of $$(".view")) {
     view.classList.toggle("is-active", view.id === `view-${name}`);
   }
+  localStorage.setItem("zhezhi.view", name);
   if (name === "summary") loadSummary(false);
+  if (name === "minecraft") refreshMinecraftStatus();
   if (name === "voice" && !$("#tts-voice").options.length) loadVoices();
   if (location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
 }
 
+function initialView() {
+  const hash = location.hash.replace("#", "");
+  if (hash && $(`#view-${hash}`)) return hash;
+  const saved = localStorage.getItem("zhezhi.view");
+  if (saved && $(`#view-${saved}`)) return saved;
+  return "connect";
+}
+
 function bindNav() {
+  const nav = $(".nav");
+  const updateArrows = () => {
+    for (const arrow of $$(".nav-carousel-arrow")) {
+      arrow.disabled = arrow.dataset.navDirection === "previous"
+        ? nav.scrollLeft <= 1
+        : nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 1;
+    }
+  };
+  for (const arrow of $$(".nav-carousel-arrow")) {
+    arrow.addEventListener("click", () => nav.scrollBy({
+      left: (arrow.dataset.navDirection === "next" ? 1 : -1) * nav.clientWidth * 0.75,
+      behavior: "smooth",
+    }));
+  }
+  nav.addEventListener("scroll", updateArrows, { passive: true });
+  window.addEventListener("resize", updateArrows);
+  updateArrows();
   for (const button of $$(".nav-item")) {
     button.addEventListener("click", () => setView(button.dataset.view));
   }
-  const initial = location.hash.replace("#", "");
-  if (initial && $(`#view-${initial}`)) setView(initial);
+  window.addEventListener("hashchange", () => {
+    const name = location.hash.replace("#", "");
+    if (name && $(`#view-${name}`) && name !== activeView) setView(name);
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -1481,8 +2022,12 @@ async function init() {
   bindSecrets();
   bindVoice();
   bindAlertAudio();
+  bindAlertVideo();
+  bindMobRules();
   bindOverlay();
   bindModeration();
+  bindPause();
+  bindBackup();
 
   $("#btn-summary").addEventListener("click", () => loadSummary(false));
   $("#btn-summary-ai").addEventListener("click", () => loadSummary(true));
@@ -1508,6 +2053,7 @@ async function init() {
     toast(`No pude hablar con el servidor: ${error.message}`, "bad");
   }
 
+  setView(initialView());
   connectWs();
   loadVoices();
 

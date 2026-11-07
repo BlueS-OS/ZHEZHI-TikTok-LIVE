@@ -26,6 +26,10 @@ import { Demo } from "./src/demo.js";
 import { checkService } from "./src/diagnostics.js";
 import { voiceStudioVoices } from "./src/voicestudio.js";
 import { AlertAudioStore, AUDIO_KINDS, MAX_ALERT_AUDIO_BYTES } from "./src/alert-audio.js";
+import { AlertVideoStore, VIDEO_KINDS, MAX_ALERT_VIDEO_BYTES } from "./src/alert-video.js";
+import { createInteractions, applyInteraction, interactionSnapshot } from "./src/interactions.js";
+import { createMinecraftBridge } from "./src/minecraft.js";
+import { createMobRulesState, hasActiveGiftMobRule, matchMobRules } from "./src/mob-rules.js";
 import { shouldAnnounceLike } from "./src/like-alert.js";
 import { socialAnnouncement } from "./src/voice-announcements.js";
 
@@ -41,6 +45,9 @@ const log = (message) => {
 
 let config = loadConfig();
 let stats = createStats();
+let interactions = createInteractions();
+const minecraft = createMinecraftBridge();
+let mobRulesState = createMobRulesState();
 const events = [];
 const suggestions = [];
 const moderationState = createModerationState();
@@ -48,6 +55,7 @@ const replyState = createReplyState();
 let clients = new Set();
 let statsTimer = null;
 let actualPort = config.port;
+let paused = false;
 let autoReplyWarned = false;
 let wasConnected = false;
 let lastLikeAlertAt = 0;
@@ -57,6 +65,7 @@ const manager = new TikTokManager(log);
 const voice = new VoiceEngine({ dir: TTS_DIR, log });
 const demo = new Demo((event) => handleEvent(event, { demo: true }), log);
 const alertAudio = new AlertAudioStore(path.join(ROOT, "data", "alerts"));
+const alertVideo = new AlertVideoStore(path.join(ROOT, "data", "alert-videos"));
 
 /* ------------------------------------------------------------------ */
 /* Utilidades                                                          */
@@ -69,11 +78,15 @@ function publicState() {
     config: publicConfig(config),
     status: manager.snapshot(),
     stats: statsSnapshot(stats),
+    votes: interactionSnapshot(interactions),
+    minecraftOnline: minecraft.online(),
     events: events.slice(0, 120),
     suggestions: suggestions.slice(0, 20),
     overlayUrls: overlayUrls(),
     alertAudio: alertAudio.urls(),
+    alertVideo: alertVideo.urls(),
     demo: demo.active,
+    paused,
     reasons: REASON_LABELS,
   };
 }
@@ -86,6 +99,10 @@ function overlayUrls() {
     chat: `${base}?alerts=0&captions=0`,
     clean: `${base}?alerts=0&chat=0&captions=1`,
     likes: `http://127.0.0.1:${actualPort}/likes.html`,
+    goal: `http://127.0.0.1:${actualPort}/goal.html`,
+    topBoth: `http://127.0.0.1:${actualPort}/leaderboard.html`,
+    topLikes: `http://127.0.0.1:${actualPort}/leaderboard.html?board=likes`,
+    topGifts: `http://127.0.0.1:${actualPort}/leaderboard.html?board=gifts`,
   };
 }
 
@@ -122,6 +139,9 @@ function scheduleStats(immediate = false) {
 
 function resetSession(notify = true) {
   stats = createStats();
+  interactions = createInteractions();
+  mobRulesState = createMobRulesState();
+  minecraft.clear();
   events.length = 0;
   suggestions.length = 0;
   moderationState.users.clear();
@@ -143,7 +163,7 @@ function resetSession(notify = true) {
 /* ------------------------------------------------------------------ */
 
 function speak(event) {
-  if (!config.tts.enabled) return;
+  if (!config.tts.enabled || paused) return;
   const receivedAt = Date.now();
   const t = config.tts;
   let text = "";
@@ -208,10 +228,17 @@ function speak(event) {
 }
 
 function playCustomAlert(event) {
+  if (paused) return;
   const kind = event.kind;
-  if (!config.customAudio.enabled || !AUDIO_KINDS.has(kind) || !config.customAudio[kind]) return;
-  const url = alertAudio.urls()[kind];
-  if (url) broadcast({ type: "alert-sound", kind, url, volume: config.customAudio.volume, at: Date.now() });
+  if (!AUDIO_KINDS.has(kind)) return;
+  if (config.customAudio.enabled && config.customAudio[kind]) {
+    const url = alertAudio.urls()[kind];
+    if (url) broadcast({ type: "alert-sound", kind, url, volume: config.customAudio.volume, at: Date.now() });
+  }
+  if (config.customVideo.enabled && config.customVideo[kind]) {
+    const url = alertVideo.urls()[kind];
+    if (url) broadcast({ type: "alert-video", kind, url, chroma: config.customVideo.chroma, sound: config.customVideo.sound, at: Date.now() });
+  }
 }
 
 async function callAi(messages, { maxTokens = 120, temperature = 0.7 } = {}) {
@@ -252,7 +279,7 @@ async function askAiReply(event) {
 }
 
 async function deliverReply(event, response, source, ruleId = null) {
-  if (!response) return;
+  if (paused || !response) return;
   const item = {
     type: "suggestion",
     id: event.id,
@@ -294,7 +321,7 @@ async function deliverReply(event, response, source, ruleId = null) {
 }
 
 function considerReply(event) {
-  if (!config.reply.enabled || event.hidden) return;
+  if (paused || !config.reply.enabled || event.hidden) return;
   if (event.user?.username && event.user.username === config.tiktok.username) return;
 
   const rule = pickRule(event.text, config.reply, replyState, event.user?.id, event.at);
@@ -336,10 +363,14 @@ function handleEvent(raw, meta = {}) {
 
   if (event.kind === "like") {
     applyEvent(stats, event);
+    triggerInteraction(event);
+    triggerMobRules(event);
     scheduleStats();
     const now = Date.now();
     if (shouldAnnounceLike(lastLikeAlertAt, now)) {
       lastLikeAlertAt = now;
+      events.unshift(event);
+      if (events.length > MAX_EVENTS) events.length = MAX_EVENTS;
       broadcast({ type: "event", event });
       playCustomAlert(event);
       speak(event);
@@ -366,6 +397,8 @@ function handleEvent(raw, meta = {}) {
   if (!event.hidden) {
     applyEvent(stats, event);
   }
+  triggerInteraction(event);
+  triggerMobRules(event);
 
   events.unshift(event);
   if (events.length > MAX_EVENTS) events.length = MAX_EVENTS;
@@ -385,6 +418,25 @@ function handleEvent(raw, meta = {}) {
   } else {
     speak(event);
   }
+}
+
+function triggerInteraction(event) {
+  if (paused) return;
+  const result = applyInteraction(interactions, event, config.interactions);
+  if (result) {
+    broadcast({ type: "interaction", interaction: result });
+    const customGiftRule = hasActiveGiftMobRule(config.minecraft.mobRules);
+    if (config.minecraft.enabled && !(result.kind === "gift" && customGiftRule)) minecraft.enqueue(result);
+  }
+}
+
+function minecraftActive() {
+  return config.minecraft.enabled && (config.interactions.enabled || config.minecraft.mobRules.some((rule) => rule.enabled));
+}
+
+function triggerMobRules(event) {
+  if (paused || !config.minecraft.enabled || !minecraft.online()) return;
+  for (const action of matchMobRules(mobRulesState, event, config.minecraft.mobRules)) minecraft.enqueueMob(action);
 }
 
 /* ------------------------------------------------------------------ */
@@ -425,6 +477,18 @@ async function readAudio(req) {
   return Buffer.concat(chunks);
 }
 
+async function readVideo(req) {
+  if (Number(req.headers["content-length"]) > MAX_ALERT_VIDEO_BYTES) throw new Error("El vídeo supera los 30 MB");
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > MAX_ALERT_VIDEO_BYTES) throw new Error("El vídeo supera los 30 MB");
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
 function header(value) {
   return Array.isArray(value) ? value[0] : value || "";
 }
@@ -455,6 +519,21 @@ async function handleApi(req, res, url) {
     return true;
   }
 
+  if (method === "GET" && url.pathname === "/api/minecraft/poll") {
+    if (header(req.headers["x-directo"]) !== "1" || header(req.headers.origin)) {
+      sendJson(res, 403, { error: "Solo puente local" });
+      return true;
+    }
+    const actions = minecraft.poll();
+    sendJson(res, 200, { actions: !paused && minecraftActive() ? actions : [] });
+    return true;
+  }
+
+  if (method === "GET" && url.pathname === "/api/minecraft/status") {
+    sendJson(res, 200, { connected: minecraft.online(), enabled: minecraftActive(), paused, lastDelivery: minecraft.lastDelivery() });
+    return true;
+  }
+
   const audioRoute = /^\/api\/alert-audio\/(follow|gift|like)$/.exec(url.pathname);
   if (audioRoute && ["POST", "DELETE"].includes(method)) {
     try {
@@ -465,6 +544,20 @@ async function handleApi(req, res, url) {
       sendJson(res, 200, { ok: true, audio: files });
     } catch (error) {
       sendJson(res, error.message.includes("12 MB") ? 413 : 400, { error: error.message });
+    }
+    return true;
+  }
+
+  const videoRoute = /^\/api\/alert-video\/(follow|gift|like)$/.exec(url.pathname);
+  if (videoRoute && ["POST", "DELETE"].includes(method)) {
+    try {
+      const files = method === "DELETE"
+        ? await alertVideo.remove(videoRoute[1])
+        : await alertVideo.save(videoRoute[1], await readVideo(req));
+      broadcast({ type: "alert-video-files", video: files });
+      sendJson(res, 200, { ok: true, video: files });
+    } catch (error) {
+      sendJson(res, error.message.includes("30 MB") ? 413 : 400, { error: error.message });
     }
     return true;
   }
@@ -501,6 +594,8 @@ async function handleApi(req, res, url) {
     try {
       const patch = await readJson(req);
       config = saveConfig(applySettings(config, patch));
+      if (patch?.minecraft?.mobRules !== undefined) { mobRulesState = createMobRulesState(); minecraft.clearActions(); }
+      if (!minecraftActive()) minecraft.clear();
       manager.updateConfig(config);
       autoReplyWarned = false;
       broadcast({ type: "settings", config: publicConfig(config) });
@@ -541,9 +636,46 @@ async function handleApi(req, res, url) {
   if (method === "POST" && url.pathname === "/api/demo") {
     const body = await readJson(req);
     if (body?.on === false) demo.stop();
-    else if (body?.kind) demo.emitKind(String(body.kind));
+    else if (body?.kind) demo.emitKind(String(body.kind), { tier: body?.tier });
     else demo.start(Number(body?.intervalMs) || 3200);
     sendJson(res, 200, { ok: true, demo: demo.active });
+    return true;
+  }
+
+  if (method === "POST" && url.pathname === "/api/pause") {
+    const body = await readJson(req);
+    paused = body?.toggle ? !paused : Boolean(body?.paused);
+    if (paused) minecraft.clear();
+    broadcast({ type: "pause", paused, at: Date.now() });
+    sendJson(res, 200, { ok: true, paused });
+    return true;
+  }
+
+  if (method === "GET" && url.pathname === "/api/config/export") {
+    sendJson(res, 200, {
+      app: "Zhezhi",
+      version: VERSION,
+      exportedAt: new Date().toISOString(),
+      config: publicConfig(config),
+    });
+    return true;
+  }
+
+  if (method === "POST" && url.pathname === "/api/config/import") {
+    try {
+      const body = await readJson(req);
+      const incoming = body?.config && typeof body.config === "object" ? body.config : body;
+      if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
+        throw new Error("El archivo no contiene una configuración válida");
+      }
+      config = saveConfig(applySettings(config, incoming));
+      manager.updateConfig(config);
+      autoReplyWarned = false;
+      broadcast({ type: "settings", config: publicConfig(config) });
+      sendJson(res, 200, { ok: true, config: publicConfig(config) });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
     return true;
   }
 
@@ -675,6 +807,8 @@ const MIME = {
   ".woff2": "font/woff2",
   ".mp3": "audio/mpeg",
   ".wav": "audio/wav",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
 };
 
 async function serveFile(res, filePath, cache = false) {
@@ -717,6 +851,14 @@ const server = http.createServer(async (req, res) => {
     if (alertFile) {
       const current = alertAudio.file(alertFile[1]);
       if (current?.ext === alertFile[2]) await serveFile(res, current.filePath);
+      else res.writeHead(404).end("No encontrado");
+      return;
+    }
+
+    const videoFile = /^\/alert-video\/(follow|gift|like)\.(mp4|webm)$/.exec(url.pathname);
+    if (videoFile) {
+      const current = alertVideo.file(videoFile[1]);
+      if (current?.ext === videoFile[2]) await serveFile(res, current.filePath);
       else res.writeHead(404).end("No encontrado");
       return;
     }

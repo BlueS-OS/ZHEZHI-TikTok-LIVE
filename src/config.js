@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { normalizeMobRules } from "./mob-rules.js";
 
 export const ROOT = path.resolve(import.meta.dirname, "..");
 export const CONFIG_PATH = path.join(ROOT, "config.json");
@@ -54,6 +55,24 @@ const DEFAULTS = {
     sound: true,
     giftMinDiamonds: 1,
     durationMs: 6000,
+    scale: 1,
+    safeArea: 24,
+    alertsPosition: "top-center",
+    chatPosition: "bottom-left",
+    captionsPosition: "bottom-center",
+    alertsWidth: 600,
+    chatWidth: 450,
+    chatSize: 15,
+    alertNameSize: 25,
+    captionSize: 21,
+    performance: false,
+  },
+  goals: {
+    enabled: true,
+    label: "Meta del directo",
+    followers: 0,
+    likes: 0,
+    diamonds: 0,
   },
   alerts: {
     follow: true,
@@ -69,6 +88,12 @@ const DEFAULTS = {
     like: true,
     volume: 80,
   },
+  customVideo: { enabled: false, follow: true, gift: true, like: true, chroma: "none", sound: true },
+  interactions: {
+    enabled: false, likes: true, likesStep: 50, gifts: true, giftMin: 100,
+    comments: true, optionA: "Rojo", optionB: "Azul", sound: false,
+  },
+  minecraft: { enabled: false, mobRules: [] },
   tts: {
     enabled: true,
     provider: "edge",
@@ -123,6 +148,15 @@ const DEFAULTS = {
 };
 
 const MATCH_TYPES = new Set(["command", "contains", "exact", "startsWith", "regex"]);
+const OVERLAY_POSITIONS = new Set([
+  "top-left",
+  "top-center",
+  "top-right",
+  "bottom-left",
+  "bottom-center",
+  "bottom-right",
+]);
+const CAPTION_POSITIONS = new Set(["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"]);
 
 function clone(value) {
   return structuredClone(value);
@@ -202,6 +236,30 @@ export function normalizeConfig(raw) {
       sound: bool(merged.overlay.sound, true),
       giftMinDiamonds: num(merged.overlay.giftMinDiamonds, 1, 0, 100000),
       durationMs: num(merged.overlay.durationMs, 6000, 2000, 20000),
+      scale: num(merged.overlay.scale, 1, 0.6, 1.8),
+      safeArea: num(merged.overlay.safeArea, 24, 0, 120),
+      alertsPosition: OVERLAY_POSITIONS.has(merged.overlay.alertsPosition)
+        ? merged.overlay.alertsPosition
+        : "top-center",
+      chatPosition: OVERLAY_POSITIONS.has(merged.overlay.chatPosition)
+        ? merged.overlay.chatPosition
+        : "bottom-left",
+      captionsPosition: CAPTION_POSITIONS.has(merged.overlay.captionsPosition)
+        ? merged.overlay.captionsPosition
+        : "bottom-center",
+      alertsWidth: num(merged.overlay.alertsWidth, 600, 320, 1000),
+      chatWidth: num(merged.overlay.chatWidth, 450, 240, 800),
+      chatSize: num(merged.overlay.chatSize, 15, 10, 30),
+      alertNameSize: num(merged.overlay.alertNameSize, 25, 14, 44),
+      captionSize: num(merged.overlay.captionSize, 21, 12, 40),
+      performance: bool(merged.overlay.performance, false),
+    },
+    goals: {
+      enabled: bool(merged.goals.enabled, true),
+      label: text(merged.goals.label, "Meta del directo", 60).trim() || "Meta del directo",
+      followers: num(merged.goals.followers, 0, 0, 100000000),
+      likes: num(merged.goals.likes, 0, 0, 1000000000),
+      diamonds: num(merged.goals.diamonds, 0, 0, 1000000000),
     },
     alerts: {
       follow: bool(merged.alerts.follow, true),
@@ -216,6 +274,29 @@ export function normalizeConfig(raw) {
       gift: bool(merged.customAudio.gift, true),
       like: bool(merged.customAudio.like, true),
       volume: num(merged.customAudio.volume, 80, 0, 100),
+    },
+    customVideo: {
+      enabled: bool(merged.customVideo.enabled, false),
+      follow: bool(merged.customVideo.follow, true),
+      gift: bool(merged.customVideo.gift, true),
+      like: bool(merged.customVideo.like, true),
+      chroma: ["none", "green", "blue"].includes(merged.customVideo.chroma) ? merged.customVideo.chroma : "none",
+      sound: bool(merged.customVideo.sound, true),
+    },
+    interactions: {
+      enabled: bool(merged.interactions.enabled, false),
+      likes: bool(merged.interactions.likes, true),
+      likesStep: num(merged.interactions.likesStep, 50, 1, 10000),
+      gifts: bool(merged.interactions.gifts, true),
+      giftMin: num(merged.interactions.giftMin, 100, 1, 100000),
+      comments: bool(merged.interactions.comments, true),
+      optionA: text(merged.interactions.optionA, "Rojo", 24),
+      optionB: text(merged.interactions.optionB, "Azul", 24),
+      sound: bool(merged.interactions.sound, false),
+    },
+    minecraft: {
+      enabled: bool(merged.minecraft.enabled, false),
+      mobRules: normalizeMobRules(merged.minecraft.mobRules),
     },
     tts: {
       enabled: bool(merged.tts.enabled, true),

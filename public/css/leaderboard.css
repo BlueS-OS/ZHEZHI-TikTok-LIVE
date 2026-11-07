@@ -1,0 +1,303 @@
+/* ==================================================================
+   ZHEZHI · clasificaciones del directo
+   ================================================================== */
+
+:root {
+  --paper: #f7f2e8;
+  --muted: #a9bdb7;
+  --gold: #ebcd93;
+  --jade: #74e0c4;
+  --rose: #f2b3c6;
+  --tone: #ebcd93;
+  --tone-soft: rgba(235, 205, 147, 0.14);
+  --line: rgba(247, 242, 232, 0.16);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  color: var(--paper);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.leaderboards {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  width: max-content;
+  max-width: 100%;
+  padding: 12px;
+}
+
+.board {
+  position: relative;
+  width: 322px;
+  max-width: calc(100vw - 24px);
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background:
+    radial-gradient(130% 150% at 100% 0%, var(--tone-soft), transparent 58%),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(247, 242, 232, 0.025) 32px 33px),
+    linear-gradient(150deg, rgba(16, 40, 48, 0.97), rgba(6, 17, 23, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 26px 55px -26px rgba(0, 0, 0, 0.9),
+    0 0 45px -28px var(--tone);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.board::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, var(--tone), rgba(247, 242, 232, 0.12) 60%, transparent);
+  opacity: 0.75;
+}
+
+.board::after {
+  content: "折";
+  position: absolute;
+  right: 12px;
+  bottom: 2px;
+  color: rgba(247, 242, 232, 0.028);
+  font-family: "Microsoft YaHei", SimSun, serif;
+  font-size: 64px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.board-likes {
+  --tone: #f2b3c6;
+  --tone-soft: rgba(242, 179, 198, 0.13);
+}
+
+.board-gifts {
+  --tone: #ebcd93;
+  --tone-soft: rgba(235, 205, 147, 0.14);
+}
+
+.board header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(247, 242, 232, 0.1);
+}
+
+.seal {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 1px solid var(--tone);
+  border-radius: 12px;
+  background: linear-gradient(145deg, var(--tone-soft), rgba(247, 242, 232, 0.02));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 24px -9px var(--tone);
+  color: var(--tone);
+  font-size: 23px;
+  line-height: 1;
+}
+
+header small {
+  color: var(--tone);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+}
+
+h1 {
+  margin: 2px 0 0;
+  color: #fbf6ea;
+  font-family: var(--serif);
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+}
+
+ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 0 0;
+  list-style: none;
+}
+
+.rank {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 45px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(8, 14, 12, 0.5);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.rank:hover {
+  border-color: rgba(247, 242, 232, 0.12);
+  background: rgba(8, 14, 12, 0.68);
+}
+
+.rank-1 {
+  border-color: rgba(235, 205, 147, 0.38);
+  background:
+    linear-gradient(100deg, rgba(235, 205, 147, 0.16), rgba(235, 205, 147, 0.05) 55%, rgba(8, 14, 12, 0.35));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 0 26px -14px rgba(235, 205, 147, 0.8);
+}
+
+.rank-1::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 245, 214, 0.1) 48%, transparent 64%);
+}
+
+.position {
+  width: 23px;
+  flex: none;
+  color: #aab4ae;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.rank-1 .position {
+  color: #f6d489;
+  font-size: 23px;
+  text-shadow: 0 0 14px rgba(235, 205, 147, 0.65);
+}
+
+.rank-2 .position {
+  color: #cfd8d4;
+}
+
+.rank-3 .position {
+  color: #dcaa80;
+}
+
+.avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid rgba(247, 242, 232, 0.22);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(247, 242, 232, 0.1), rgba(247, 242, 232, 0.02));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: var(--tone);
+  font-size: 12px;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.rank-1 .avatar {
+  border-color: rgba(235, 205, 147, 0.75);
+  box-shadow:
+    0 0 0 2px rgba(235, 205, 147, 0.15),
+    0 0 18px -6px rgba(235, 205, 147, 0.8);
+}
+
+.avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #f0ebdf;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.score {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 3px 9px;
+  border: 1px solid rgba(247, 242, 232, 0.08);
+  border-radius: 999px;
+  background: var(--tone-soft);
+  color: var(--tone);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  padding: 20px 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.empty::before {
+  content: "折枝";
+  display: block;
+  margin-bottom: 9px;
+  color: rgba(235, 205, 147, 0.5);
+  font-family: "Microsoft YaHei", SimSun, serif;
+  font-size: 13px;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(235, 205, 147, 0.3);
+}
+
+.board:has(.empty)::after {
+  display: none;
+}
+
+.only-likes .board-gifts,
+.only-gifts .board-likes {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .leaderboards {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}

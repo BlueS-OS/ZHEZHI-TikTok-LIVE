@@ -52,6 +52,34 @@ test("la configuración pública no expone secretos", () => {
   assert.equal(pub.ai.hasApiKey, true);
 });
 
+test("normaliza la disposición del overlay y las metas", () => {
+  const cfg = normalizeConfig({
+    overlay: {
+      scale: 9,
+      safeArea: -4,
+      alertsPosition: "middle",
+      chatPosition: "bottom-right",
+      captionsPosition: "top-left",
+      chatWidth: 100,
+      chatSize: 999,
+      performance: true,
+    },
+    goals: { followers: -5, likes: 1500, diamonds: 25, label: "  Directo  " },
+  });
+  assert.equal(cfg.overlay.scale, 1.8);
+  assert.equal(cfg.overlay.safeArea, 0);
+  assert.equal(cfg.overlay.alertsPosition, "top-center");
+  assert.equal(cfg.overlay.chatPosition, "bottom-right");
+  assert.equal(cfg.overlay.captionsPosition, "top-left");
+  assert.equal(cfg.overlay.chatWidth, 240);
+  assert.equal(cfg.overlay.chatSize, 30);
+  assert.equal(cfg.overlay.performance, true);
+  assert.equal(cfg.goals.followers, 0);
+  assert.equal(cfg.goals.likes, 1500);
+  assert.equal(cfg.goals.diamonds, 25);
+  assert.equal(cfg.goals.label, "Directo");
+});
+
 test("quita la arroba del usuario", () => {
   const cfg = normalizeConfig({ tiktok: { username: "@MiCanal" } });
   assert.equal(cfg.tiktok.username, "MiCanal");

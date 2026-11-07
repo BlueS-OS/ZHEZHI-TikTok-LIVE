@@ -40,8 +40,13 @@ export class AlertAudioStore {
     await fsp.mkdir(this.dir, { recursive: true });
     const target = path.join(this.dir, `${kind}.${ext}`);
     const tmp = `${target}.tmp`;
-    await fsp.writeFile(tmp, bytes);
-    await fsp.rename(tmp, target);
+    try {
+      await fsp.writeFile(tmp, bytes);
+      await fsp.rename(tmp, target);
+    } catch (error) {
+      await fsp.unlink(tmp).catch(() => {});
+      throw error;
+    }
     await fsp.unlink(path.join(this.dir, `${kind}.${ext === "mp3" ? "wav" : "mp3"}`)).catch(() => {});
     return this.urls();
   }

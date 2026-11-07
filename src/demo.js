@@ -89,12 +89,14 @@ export class Demo {
     this.log("Modo demo desactivado");
   }
 
-  emitKind(kind) {
+  emitKind(kind, options = {}) {
     const user = person();
     switch (kind) {
       case "gift": {
-        const [name, unit] = pick(GIFTS);
-        const count = Math.random() > 0.75 ? 3 : 1;
+        const tier = options?.tier === "large" ? "large" : options?.tier === "small" ? "small" : "any";
+        const pool = tier === "large" ? GIFTS.slice(-2) : tier === "small" ? GIFTS.slice(0, 3) : GIFTS;
+        const [name, unit] = pick(pool);
+        const count = tier === "large" ? 1 : Math.random() > 0.75 ? 3 : 1;
         const diamonds = unit * count;
         this.onEvent(
           event("gift", user, {

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="ensoInk" x1="40" y1="40" x2="210" y2="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8ff0d6" stop-opacity=".15"/>
+      <stop offset=".35" stop-color="#74e0c4" stop-opacity=".85"/>
+      <stop offset=".72" stop-color="#ebcd93" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#f2b3c6" stop-opacity=".25"/>
+    </linearGradient>
+    <filter id="ensoRough" x="-12%" y="-12%" width="124%" height="124%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045 0.09" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="0.4"/>
+    </filter>
+  </defs>
+  <path d="M96 32a92 92 0 1 1-58 163" stroke="url(#ensoInk)" stroke-width="9" stroke-linecap="round" filter="url(#ensoRough)"/>
+  <path d="M96 32a92 92 0 1 1-58 163" stroke="url(#ensoInk)" stroke-width="2.4" stroke-linecap="round" opacity=".55" transform="translate(3 4) scale(.985)"/>
+</svg>

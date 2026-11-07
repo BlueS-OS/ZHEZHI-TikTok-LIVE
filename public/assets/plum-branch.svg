@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 340" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="branchInk" x1="352" y1="332" x2="150" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#cfe0d6" stop-opacity=".14"/>
+      <stop offset=".38" stop-color="#dde7db" stop-opacity=".42"/>
+      <stop offset=".72" stop-color="#efe8d8" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#f7f1e2" stop-opacity=".8"/>
+    </linearGradient>
+    <radialGradient id="petalPink" cx=".38" cy=".32" r=".85">
+      <stop offset="0" stop-color="#ffe4ec"/>
+      <stop offset=".52" stop-color="#f4b8ca"/>
+      <stop offset="1" stop-color="#cf819a"/>
+    </radialGradient>
+    <g id="blossom">
+      <g fill="url(#petalPink)">
+        <ellipse cx="0" cy="-10" rx="5.4" ry="7.6"/>
+        <ellipse cx="0" cy="-10" rx="5.4" ry="7.6" transform="rotate(72)"/>
+        <ellipse cx="0" cy="-10" rx="5.4" ry="7.6" transform="rotate(144)"/>
+        <ellipse cx="0" cy="-10" rx="5.4" ry="7.6" transform="rotate(216)"/>
+        <ellipse cx="0" cy="-10" rx="5.4" ry="7.6" transform="rotate(288)"/>
+      </g>
+      <circle r="3.1" fill="#f4dca8"/>
+      <circle r="1.3" fill="#c8a45f"/>
+    </g>
+    <g id="bud">
+      <ellipse rx="3.6" ry="5.2" fill="#d98ba4"/>
+      <ellipse rx="3.6" ry="5.2" fill="#f9cbd8" transform="translate(1.7 -1.7) scale(.66)"/>
+    </g>
+  </defs>
+
+  <g stroke="url(#branchInk)" stroke-linecap="round" fill="none">
+    <path d="M352 332C316 286 288 254 258 220c-30-34-52-70-66-112-8-24-14-52-16-86" stroke-width="5"/>
+    <path d="M268 232c-28 8-54 8-78-2-20-8-36-22-48-40" stroke-width="2.7"/>
+    <path d="M218 172c24-12 48-20 76-22" stroke-width="2.3"/>
+    <path d="M186 96c-24-4-44-14-60-30" stroke-width="2.1"/>
+    <path d="M176 40c20-8 38-20 52-36" stroke-width="1.9"/>
+    <path d="M300 284c18-8 32-22 40-40" stroke-width="1.7"/>
+    <path d="M142 190c-16-2-30-8-42-18" stroke-width="1.6"/>
+  </g>
+
+  <g>
+    <use href="#blossom" transform="translate(176 22) rotate(14) scale(1.2)"/>
+    <use href="#blossom" transform="translate(294 150) rotate(-12) scale(1.02)"/>
+    <use href="#blossom" transform="translate(126 66) rotate(22) scale(.94)"/>
+    <use href="#blossom" transform="translate(228 4) rotate(-24) scale(.9)"/>
+    <use href="#blossom" transform="translate(190 230) rotate(8) scale(.92)"/>
+    <use href="#blossom" transform="translate(142 190) rotate(30) scale(.74)"/>
+    <use href="#blossom" transform="translate(340 244) rotate(-30) scale(.7)"/>
+    <use href="#blossom" transform="translate(100 172) rotate(46) scale(.62)"/>
+    <use href="#bud" transform="translate(274 158) rotate(-38)"/>
+    <use href="#bud" transform="translate(156 60) rotate(18)"/>
+    <use href="#bud" transform="translate(242 208) rotate(70) scale(.82)"/>
+  </g>
+
+  <g fill="url(#petalPink)" opacity=".5">
+    <ellipse cx="250" cy="88" rx="3.3" ry="4.9" transform="rotate(28 250 88)"/>
+    <ellipse cx="312" cy="200" rx="2.8" ry="4.2" transform="rotate(-42 312 200)"/>
+    <ellipse cx="150" cy="262" rx="3" ry="4.5" transform="rotate(12 150 262)"/>
+    <ellipse cx="210" cy="120" rx="2.6" ry="3.9" transform="rotate(64 210 120)"/>
+  </g>
+</svg>

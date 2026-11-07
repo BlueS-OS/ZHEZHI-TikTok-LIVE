@@ -1,3 +1,6 @@
+import { showAlertVideo } from "./alert-video.js";
+import { setInteractionConfig, setVotes, showInteraction, clearInteractions } from "./interactions.js";
+
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
 const preview = params.get("preview") === "1";
@@ -13,6 +16,17 @@ let config = {
     sound: true,
     giftMinDiamonds: 1,
     durationMs: 6000,
+    scale: 1,
+    safeArea: 24,
+    alertsPosition: "top-center",
+    chatPosition: "bottom-left",
+    captionsPosition: "bottom-center",
+    alertsWidth: 600,
+    chatWidth: 450,
+    chatSize: 15,
+    alertNameSize: 25,
+    captionSize: 21,
+    performance: false,
   },
   alerts: { follow: true, subscribe: true, gift: true, like: true, share: false },
   customAudio: { enabled: false, follow: true, gift: true, like: true, volume: 80 },
@@ -20,14 +34,18 @@ let config = {
 
 let ws = null;
 let wsRetry = 0;
+let paused = false;
 const alertQueue = [];
 let alertBusy = false;
+let alertStop = null;
 const ttsQueue = [];
 let ttsPlaying = false;
 let ttsFinishing = false;
 let captionTimer = null;
 let audioContext = null;
 let alertAudio = { follow: null, gift: null };
+let alertVideo = { follow: null, gift: null, like: null };
+let stopVideo = null;
 const soundQueue = [];
 let soundPlaying = false;
 
@@ -57,7 +75,49 @@ function applyConfig(next) {
   document.body.classList.toggle("hide-alerts", !visible("alerts"));
   document.body.classList.toggle("hide-chat", !visible("chat"));
   document.body.classList.toggle("hide-captions", !visible("captions"));
+  applyLayout();
+  setInteractionConfig(visible("alerts") ? next.interactions : null);
   trimChat();
+}
+
+function numberOr(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function applyLayout() {
+  const o = config.overlay || {};
+  const root = document.documentElement;
+  const scale = Math.min(1.8, Math.max(0.6, numberOr(o.scale, 1)));
+  const safeArea = Math.min(120, Math.max(0, numberOr(o.safeArea, 24)));
+  root.style.setProperty("--overlay-scale", String(scale));
+  root.style.setProperty("--safe-area", `${safeArea}px`);
+  root.style.setProperty("--alert-width", `${Math.min(1000, Math.max(320, numberOr(o.alertsWidth, 600)))}px`);
+  root.style.setProperty("--chat-width", `${Math.min(800, Math.max(240, numberOr(o.chatWidth, 450)))}px`);
+  root.style.setProperty("--chat-size", `${Math.min(30, Math.max(10, numberOr(o.chatSize, 15)))}px`);
+  root.style.setProperty("--alert-name-size", `${Math.min(44, Math.max(14, numberOr(o.alertNameSize, 25)))}px`);
+  root.style.setProperty("--caption-size", `${Math.min(40, Math.max(12, numberOr(o.captionSize, 21)))}px`);
+  document.body.dataset.alertsPosition = o.alertsPosition || "top-center";
+  document.body.dataset.chatPosition = o.chatPosition || "bottom-left";
+  document.body.dataset.captionsPosition = o.captionsPosition || "bottom-center";
+  document.body.classList.toggle("performance", Boolean(o.performance));
+}
+
+function applyPause(next) {
+  paused = Boolean(next);
+  document.body.classList.toggle("paused", paused);
+  if (!paused) return;
+  cancelAlerts();
+  ttsQueue.length = 0;
+  soundQueue.length = 0;
+  hideCaption();
+  try { audio.pause(); } catch { /* Sin audio activo. */ }
+  try { alertPlayer.pause(); } catch { /* Sin audio activo. */ }
+  stopVideo?.();
+  stopVideo = null;
+  clearInteractions();
+  soundPlaying = false;
+  ttsPlaying = false;
 }
 
 async function loadConfig() {
@@ -66,7 +126,10 @@ async function loadConfig() {
     if (response.ok) {
       const data = await response.json();
       applyConfig(data.config);
+      applyPause(data.paused);
       alertAudio = data.alertAudio || alertAudio;
+      alertVideo = data.alertVideo || alertVideo;
+      setVotes(data.votes);
     }
   } catch {
     // Seguimos con los valores por defecto.
@@ -93,6 +156,10 @@ function connect() {
     else if (data.type === "tts") enqueueTts(data.tts);
     else if (data.type === "alert-sound") enqueueAlertSound(data);
     else if (data.type === "alert-audio-files") alertAudio = data.audio;
+    else if (data.type === "alert-video-files") alertVideo = data.video;
+    else if (data.type === "alert-video") playVideo(data);
+    else if (data.type === "interaction" && !paused) showInteraction(data.interaction);
+    else if (data.type === "pause") applyPause(data.paused);
     else if (data.type === "reset") reset();
   });
 
@@ -104,8 +171,12 @@ function connect() {
 }
 
 function reset() {
+  setVotes({ a: 0, b: 0 });
+  clearInteractions();
+  stopVideo?.();
+  stopVideo = null;
   $("#chat").innerHTML = "";
-  alertQueue.length = 0;
+  cancelAlerts();
   ttsQueue.length = 0;
   soundQueue.length = 0;
   hideCaption();
@@ -201,9 +272,47 @@ function handleEvent(event) {
 }
 
 function pushAlert(kind, event) {
-  if (alertQueue.length >= 8) alertQueue.shift();
-  alertQueue.push({ kind, event });
+  if (paused) return;
+  const item = { kind, event, priority: alertPriority({ kind, event }), queuedAt: Date.now() };
+  if (alertQueue.length >= 8) {
+    // Si la cola se llena, se descarta la alerta menos importante.
+    let drop = 0;
+    for (let i = 1; i < alertQueue.length; i += 1) {
+      if (alertPriority(alertQueue[i]) < alertPriority(alertQueue[drop])) drop = i;
+    }
+    if (item.priority < alertQueue[drop].priority) return;
+    alertQueue.splice(drop, 1);
+  }
+  const index = alertQueue.findIndex((queued) => queued.priority < item.priority);
+  alertQueue.splice(index < 0 ? alertQueue.length : index, 0, item);
   runAlerts();
+}
+
+function giftTier(diamonds) {
+  const value = Number(diamonds) || 0;
+  if (value >= 10000) return 4;
+  if (value >= 1000) return 3;
+  if (value >= 100) return 2;
+  return 1;
+}
+
+function alertPriority({ kind, event }) {
+  if (kind === "gift") {
+    const tier = giftTier(event?.diamonds);
+    return [0, 62, 74, 88, 100][tier];
+  }
+  if (kind === "subscribe") return 56;
+  if (kind === "follow") return 44;
+  if (kind === "share") return 32;
+  if (kind === "like") return 20;
+  return 10;
+}
+
+function cancelAlerts() {
+  alertQueue.length = 0;
+  alertStop?.();
+  alertStop = null;
+  for (const node of [...$("#alerts").children]) node.remove();
 }
 
 async function runAlerts() {
@@ -218,9 +327,13 @@ async function runAlerts() {
 
 function showAlert({ kind, event }) {
   return new Promise((resolve) => {
-    const duration = kind === "like" ? 2000 : Math.max(2000, Number(config.overlay.durationMs) || 6000);
+    const tier = kind === "gift" ? giftTier(event?.diamonds) : 1;
+    const duration = kind === "like"
+      ? 2000
+      : Math.max(2000, (Number(config.overlay.durationMs) || 6000) + (tier - 1) * 900);
     const card = document.createElement("div");
-    card.className = `alert alert-${kind}`;
+    card.className = `alert alert-${kind} tier-${tier}`;
+    card.dataset.tier = String(tier);
     card.style.setProperty("--dur", `${duration}ms`);
 
     const art = document.createElement("div");
@@ -278,15 +391,26 @@ function showAlert({ kind, event }) {
     card.append(art, copy, progress);
     $("#alerts").append(card);
 
+    let finished = false;
+    let hideTimer = null;
+    let removeTimer = null;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(hideTimer);
+      clearTimeout(removeTimer);
+      card.remove();
+      if (alertStop === finish) alertStop = null;
+      resolve();
+    };
+    alertStop = finish;
+
     if (!(config.customAudio?.enabled && config.customAudio[kind] && alertAudio[kind])) beep(kind);
     requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add("in")));
 
-    setTimeout(() => {
+    hideTimer = setTimeout(() => {
       card.classList.add("out");
-      setTimeout(() => {
-        card.remove();
-        resolve();
-      }, 320);
+      removeTimer = setTimeout(finish, 320);
     }, duration);
   });
 }
@@ -296,7 +420,7 @@ function showAlert({ kind, event }) {
 /* ------------------------------------------------------------------ */
 
 function beep(kind) {
-  if (preview || !config.overlay.sound) return;
+  if (preview || paused || !config.overlay.sound) return;
   try {
     audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
     if (audioContext.state === "suspended") audioContext.resume();
@@ -330,10 +454,17 @@ function beep(kind) {
 }
 
 function enqueueAlertSound(sound) {
-  if (preview || !["follow", "gift", "like"].includes(sound.kind) || !sound.url) return;
+  if (preview || paused || !["follow", "gift", "like"].includes(sound.kind) || !sound.url) return;
   if (soundQueue.length >= 4) soundQueue.shift();
   soundQueue.push(sound);
   playNextAlertSound();
+}
+
+function playVideo(message) {
+  if (preview || paused || !["follow", "gift", "like"].includes(message.kind) ||
+    !message.url || !message.url.startsWith(`/alert-video/${message.kind}.`)) return;
+  stopVideo?.();
+  stopVideo = showAlertVideo($("#alert-video-layer"), message.url, message.chroma, message.sound !== false);
 }
 
 function playNextAlertSound() {
@@ -360,7 +491,7 @@ for (const type of ["ended", "error"]) {
 /* ------------------------------------------------------------------ */
 
 function enqueueTts(tts) {
-  if (!tts) return;
+  if (!tts || paused) return;
   if (["chat", "join", "like"].includes(tts.kind) && Date.now() - (tts.sourceAt || Date.now()) > 20000) return;
   if (preview) {
     showCaption(tts);

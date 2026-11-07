@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "zhezhi_bridge",
+  "version": "${version}",
+  "name": "Zhezhi · Minecraft 26.3",
+  "description": "Puente local restringido para Zhezhi en un mundo individual de prueba.",
+  "environment": "client",
+  "entrypoints": { "client": ["local.zhezhi.minecraft.ZhezhiBridge"] },
+  "mixins": ["zhezhi-bridge.mixins.json"],
+  "depends": { "fabricloader": ">=0.20.1", "minecraft": "26.3", "java": ">=25" }
+}

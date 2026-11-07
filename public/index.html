@@ -4,11 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zhezhi · asistente para TikTok LIVE</title>
-  <meta name="theme-color" content="#171c1d">
+  <meta name="theme-color" content="#070f14">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/svg+xml" href="/assets/zhezhi-mark.svg">
   <link rel="stylesheet" href="/css/panel.css">
+  <link rel="stylesheet" href="/css/theme.css">
 </head>
 <body>
+<div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+<div class="petals" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
@@ -19,7 +23,9 @@
       </div>
     </div>
 
-    <nav class="nav">
+    <div class="nav-carousel">
+      <button class="nav-carousel-arrow" type="button" data-nav-direction="previous" aria-label="Ver secciones anteriores">‹</button>
+    <nav class="nav" aria-label="Secciones del panel">
       <button class="nav-item is-active" data-view="connect">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 3v4M15 3v4M7 7h10v5a5 5 0 0 1-10 0V7Z"/><path d="M12 17v4"/></svg>
         <span>Conexión</span>
@@ -36,6 +42,10 @@
       <button class="nav-item" data-view="overlay">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
         <span>Overlay</span>
+      </button>
+      <button class="nav-item" data-view="minecraft">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 10h18M10 10v11M14 3v7"/></svg>
+        <span>Minecraft</span>
       </button>
       <button class="nav-item" data-view="voice">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14"/></svg>
@@ -54,6 +64,8 @@
         <span>Ajustes</span>
       </button>
     </nav>
+      <button class="nav-carousel-arrow" type="button" data-nav-direction="next" aria-label="Ver más secciones">›</button>
+    </div>
 
     <div class="sidebar-foot">
       <div class="side-status">
@@ -72,8 +84,18 @@
       </div>
       <div class="top-right">
         <span class="uptime" id="uptime"></span>
-        <button class="btn ghost small" id="btn-demo">Modo demo</button>
-        <a class="btn ghost small" href="/overlay.html" target="_blank" rel="noreferrer">Abrir overlay</a>
+        <button class="btn ghost small pause-btn" id="btn-pause" aria-pressed="false" title="Pausar alertas, sonidos y voz (Alt+P)">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg>
+          <span id="pause-label">Pausar</span>
+        </button>
+        <button class="btn ghost small demo-btn" id="btn-demo" aria-pressed="false">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/><path d="m18 15 .9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9L18 15Z"/></svg>
+          <span id="demo-label">Modo demo</span>
+        </button>
+        <a class="btn ghost small" href="/overlay.html" target="_blank" rel="noreferrer">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
+          Abrir overlay
+        </a>
       </div>
     </header>
 
@@ -82,6 +104,7 @@
       <!-- ============================ CONEXIÓN ============================ -->
       <section class="view is-active" id="view-connect">
         <div class="welcome-hero">
+          <img class="hero-branch" src="/assets/plum-branch.svg" alt="" aria-hidden="true">
           <div class="welcome-copy">
             <span class="welcome-kicker">TALLER DE TINTA <span>·</span> EN DIRECTO</span>
             <h1>Cada voz deja <em>su trazo.</em></h1>
@@ -89,8 +112,11 @@
             <div class="welcome-points"><span><b>01</b> Chat en vivo</span><span><b>02</b> Voz y alertas</span><span><b>03</b> Tu propio ritmo</span></div>
           </div>
           <div class="welcome-art" aria-hidden="true">
-            <img src="/assets/zhezhi-mark.svg" alt="">
-            <span class="art-caption">折 · ZHEZHI</span>
+            <span class="art-halo"></span>
+            <img class="art-enso" src="/assets/enso.svg" alt="">
+            <span class="art-seal"><img src="/assets/zhezhi-mark.svg" alt=""></span>
+            <span class="art-vertical">折枝</span>
+            <span class="art-caption">折枝 · ZHEZHI</span>
           </div>
         </div>
 
@@ -105,7 +131,7 @@
             </div>
             <label class="field" for="room-id-input">Room ID numérico (opcional)</label>
             <input id="room-id-input" data-setting="tiktok.roomId" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Vacío: buscar automáticamente">
-            <div class="row gap">
+            <div class="row gap connect-actions">
               <button class="btn primary" id="btn-connect">Conectar</button>
               <button class="btn ghost" id="btn-disconnect" hidden>Desconectar</button>
             </div>
@@ -138,7 +164,7 @@
             <div class="card-eyebrow">Sin estar en directo</div>
             <h2>Modo demo</h2>
             <p class="hint">Genera mensajes, regalos y seguidores falsos para probar la voz y el overlay antes de emitir.</p>
-            <div class="row gap">
+            <div class="row gap demo-actions">
               <button class="btn" id="btn-demo-start">Activar demo</button>
               <button class="btn ghost" id="btn-demo-stop" hidden>Parar demo</button>
             </div>
@@ -322,6 +348,23 @@
               <label>Contador de «me gusta» (sin audio)</label>
               <div class="copy-row"><input readonly id="url-likes"><button class="btn tiny" data-copy="url-likes">Copiar</button></div>
             </div>
+            <div class="url-row">
+              <label>Metas del directo (seguidores, likes y diamantes)</label>
+              <div class="copy-row"><input readonly id="url-goal"><button class="btn tiny" data-copy="url-goal">Copiar</button></div>
+            </div>
+            <div class="url-row">
+              <label>Top «me gusta» + donadores (sin audio)</label>
+              <div class="copy-row"><input readonly id="url-top-both"><button class="btn tiny" data-copy="url-top-both">Copiar</button></div>
+            </div>
+            <div class="url-row">
+              <label>Solo top «me gusta»</label>
+              <div class="copy-row"><input readonly id="url-top-likes"><button class="btn tiny" data-copy="url-top-likes">Copiar</button></div>
+            </div>
+            <div class="url-row">
+              <label>Solo top donadores</label>
+              <div class="copy-row"><input readonly id="url-top-gifts"><button class="btn tiny" data-copy="url-top-gifts">Copiar</button></div>
+            </div>
+            <p class="hint">Los tops se calculan con eventos recibidos durante esta sesión. El top de donadores usa diamantes de regalos, no dinero real; no incluye datos anteriores a esta versión.</p>
             <p class="hint">Si LIVE Studio ofrece fuente de página web, pega la URL allí. Si no, deja Zhezhi abierto para escuchar la voz en el panel. En OBS: Fuentes → + → Navegador → pega la URL → 1920×1080.</p>
           </div>
 
@@ -332,6 +375,112 @@
               <iframe src="/overlay.html?preview=1" title="Vista previa del overlay" loading="lazy"></iframe>
             </div>
             <p class="hint">La vista previa se conecta al mismo directo. Si no hay eventos, usa los botones de prueba.</p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Escena</div>
+            <h2>Coloca cada capa</h2>
+            <p class="hint">Los cambios se aplican al instante en el overlay y en la vista previa. Actualiza la fuente en OBS si acabas de añadirla.</p>
+            <div class="row gap wrap">
+              <label class="field inline">Alertas
+                <select data-setting="overlay.alertsPosition">
+                  <option value="top-left">Arriba izquierda</option>
+                  <option value="top-center">Arriba centro</option>
+                  <option value="top-right">Arriba derecha</option>
+                  <option value="bottom-left">Abajo izquierda</option>
+                  <option value="bottom-center">Abajo centro</option>
+                  <option value="bottom-right">Abajo derecha</option>
+                </select>
+              </label>
+              <label class="field inline">Chat
+                <select data-setting="overlay.chatPosition">
+                  <option value="top-left">Arriba izquierda</option>
+                  <option value="top-center">Arriba centro</option>
+                  <option value="top-right">Arriba derecha</option>
+                  <option value="bottom-left">Abajo izquierda</option>
+                  <option value="bottom-center">Abajo centro</option>
+                  <option value="bottom-right">Abajo derecha</option>
+                </select>
+              </label>
+              <label class="field inline">Subtítulos
+                <select data-setting="overlay.captionsPosition">
+                  <option value="top-left">Arriba izquierda</option>
+                  <option value="top-center">Arriba centro</option>
+                  <option value="top-right">Arriba derecha</option>
+                  <option value="bottom-left">Abajo izquierda</option>
+                  <option value="bottom-center">Abajo centro</option>
+                  <option value="bottom-right">Abajo derecha</option>
+                </select>
+              </label>
+            </div>
+            <div class="range-row">
+              <label>Escala general</label>
+              <input type="range" min="60" max="180" step="5" data-setting="overlay.scale" data-scale="100">
+              <output data-for="overlay.scale">100%</output>
+            </div>
+            <div class="range-row">
+              <label>Margen seguro</label>
+              <input type="range" min="0" max="120" step="4" data-setting="overlay.safeArea">
+              <output data-for="overlay.safeArea">24</output>
+            </div>
+            <div class="range-row">
+              <label>Ancho de chat</label>
+              <input type="range" min="240" max="800" step="10" data-setting="overlay.chatWidth">
+              <output data-for="overlay.chatWidth">450</output>
+            </div>
+            <div class="range-row">
+              <label>Letra del chat</label>
+              <input type="range" min="10" max="30" step="1" data-setting="overlay.chatSize">
+              <output data-for="overlay.chatSize">15</output>
+            </div>
+            <div class="range-row">
+              <label>Nombre en alertas</label>
+              <input type="range" min="14" max="44" step="1" data-setting="overlay.alertNameSize">
+              <output data-for="overlay.alertNameSize">25</output>
+            </div>
+            <div class="range-row">
+              <label>Letra de subtítulos</label>
+              <input type="range" min="12" max="40" step="1" data-setting="overlay.captionSize">
+              <output data-for="overlay.captionSize">21</output>
+            </div>
+            <div class="chips spaced" id="overlay-presets">
+              <button class="chip" data-preset="classic">Centro clásico</button>
+              <button class="chip" data-preset="clean">Limpio abajo</button>
+              <button class="chip" data-preset="compact">Compacto</button>
+              <button class="chip" data-preset="show">Espectáculo</button>
+            </div>
+            <label class="switch top-gap"><input type="checkbox" data-setting="overlay.performance"><span>Modo rendimiento (menos blur y animaciones)</span></label>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Metas</div>
+            <h2>Objetivo del directo</h2>
+            <label class="switch"><input type="checkbox" data-setting="goals.enabled"><span>Mostrar metas en el overlay</span></label>
+            <label class="field">Título
+              <input data-setting="goals.label" maxlength="60" placeholder="Meta del directo">
+            </label>
+            <div class="row gap wrap">
+              <label class="field inline">Seguidores
+                <input type="number" min="0" max="100000000" data-setting="goals.followers" placeholder="0">
+              </label>
+              <label class="field inline">Me gusta
+                <input type="number" min="0" max="1000000000" data-setting="goals.likes" placeholder="0">
+              </label>
+              <label class="field inline">Diamantes
+                <input type="number" min="0" max="1000000000" data-setting="goals.diamonds" placeholder="0">
+              </label>
+            </div>
+            <p class="hint">Deja un objetivo en 0 para ocultarlo. La meta usa los contadores de esta sesión; el reloj muestra el tiempo desde que empezó el directo o la última conexión.</p>
+            <div class="copy-row">
+              <input readonly id="url-goal-inline">
+              <button class="btn tiny" data-copy="url-goal-inline">Copiar</button>
+              <button class="btn tiny ghost" data-open-overlay="goal">Abrir</button>
+            </div>
+            <div class="overlay-preview goal-preview top-gap">
+              <iframe src="/goal.html?preview=1" title="Vista previa de metas" loading="lazy"></iframe>
+            </div>
           </div>
         </div>
 
@@ -371,11 +520,17 @@
             <div class="chips spaced">
               <button class="chip" data-demo="follow">Seguidor</button>
               <button class="chip" data-demo="gift">Regalo</button>
+              <button class="chip" data-demo="gift" data-demo-tier="large">Regalo grande</button>
               <button class="chip" data-demo="subscribe">Suscripción</button>
               <button class="chip" data-demo="chat">Mensaje</button>
               <button class="chip" data-demo="question">Pregunta</button>
               <button class="chip" data-demo="like">Me gusta</button>
             </div>
+            <div class="row gap top-gap">
+              <button class="btn primary small" id="btn-rehearsal">Probar secuencia</button>
+              <button class="btn ghost small" id="btn-rehearsal-stop" hidden>Detener prueba</button>
+            </div>
+            <p class="hint">La secuencia lanza seguidor, regalo, suscripción, me gusta y mensaje con unos segundos de separación para revisar la cola, la intensidad y la voz.</p>
             <div class="row gap top-gap">
               <button class="btn ghost small" data-open-overlay="full">Abrir overlay completo</button>
               <button class="btn ghost small" data-open-overlay="alerts">Abrir solo alertas</button>
@@ -384,6 +539,36 @@
         </div>
 
         <div class="card">
+          <div class="card-eyebrow">Participación · opcional</div>
+          <h2>Acciones de espectadores</h2>
+          <p class="hint">Activa efectos por «me gusta» y regalos, y una votación con comandos de chat. No ejecuta acciones en otros programas. Los mensajes ocultos por moderación no cuentan.</p>
+          <label class="switch big"><input type="checkbox" data-setting="interactions.enabled"><span>Activar interacciones</span></label>
+          <div class="grid two">
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="interactions.likes"><span>Lluvia de corazones</span></label>
+              <label class="field">Cada cuántos «me gusta» recibidos
+                <input type="number" min="1" max="10000" data-setting="interactions.likesStep">
+              </label>
+            </div>
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="interactions.gifts"><span>Celebración por regalos</span></label>
+              <label class="field">Mínimo de diamantes por regalo
+                <input type="number" min="1" max="100000" data-setting="interactions.giftMin">
+              </label>
+            </div>
+          </div>
+          <label class="switch top-gap"><input type="checkbox" data-setting="interactions.comments"><span>Votación por comentarios</span></label>
+          <p class="hint">Cada persona puede votar escribiendo <strong>!a</strong> o <strong>!b</strong>. Puede cambiar de voto; no se cuentan mensajes repetidos. Se reinicia con la sesión.</p>
+          <div class="grid two">
+            <label class="field">Opción !a<input maxlength="24" data-setting="interactions.optionA"></label>
+            <label class="field">Opción !b<input maxlength="24" data-setting="interactions.optionB"></label>
+          </div>
+          <p class="hint" id="interaction-votes">Votos: 0 · 0</p>
+          <label class="switch"><input type="checkbox" data-setting="interactions.sound"><span>Sonido corto para los efectos visuales</span></label>
+          <p class="hint">Los efectos tienen un límite de una animación cada 8 segundos por tipo. Los sonidos son independientes de tus MP3/WAV y vídeos; desactívalos si se superponen.</p>
+        </div>
+
+        <div class="card overlay-media-card">
           <div class="card-eyebrow">Opcional · sin reemplazar la voz</div>
           <h2>Audios para seguidores, regalos y me gusta</h2>
           <p class="hint">Al activar esta opción sonará el archivo MP3 o WAV del evento correspondiente, sin sustituir la voz. Los «me gusta» usan un audio distinto al de regalos. Máximo 12 MB por archivo.</p>
@@ -423,6 +608,109 @@
             <output data-for="customAudio.volume">80%</output>
           </div>
           <p class="hint">Prueba «Seguidor», «Regalo» y «Me gusta» arriba. El audio suena en el overlay y, si tienes «Escuchar también en este panel» activado, también en el panel. Captura solo una de las dos fuentes de sonido para evitar duplicarlo.</p>
+        </div>
+        <div class="card overlay-media-card">
+          <div class="card-eyebrow">Opcional · independiente del audio y la voz</div>
+          <h2>Vídeos para seguidores, regalos y me gusta</h2>
+          <p class="hint">MP4 o WebM, máximo 30 MB por vídeo. Se muestra en el centro del overlay durante un máximo de 8 segundos; conserva tus audios y la voz. Para fondos verdes o azules, elige el color a eliminar.</p>
+          <label class="switch big"><input type="checkbox" data-setting="customVideo.enabled"><span>Activar vídeos personalizados</span></label>
+          <div class="grid two">
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="customVideo.follow"><span>Al seguir</span></label>
+              <input type="file" id="video-follow-file" accept=".mp4,.webm,video/mp4,video/webm">
+              <div class="row gap top-gap"><button class="btn tiny ghost" data-video-play="follow">Vista previa</button><button class="btn tiny ghost" data-video-remove="follow">Quitar</button></div>
+              <p class="hint" id="video-follow-status">Sin vídeo cargado.</p>
+            </div>
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="customVideo.gift"><span>Al donar un regalo</span></label>
+              <input type="file" id="video-gift-file" accept=".mp4,.webm,video/mp4,video/webm">
+              <div class="row gap top-gap"><button class="btn tiny ghost" data-video-play="gift">Vista previa</button><button class="btn tiny ghost" data-video-remove="gift">Quitar</button></div>
+              <p class="hint" id="video-gift-status">Sin vídeo cargado.</p>
+            </div>
+            <div>
+              <label class="switch"><input type="checkbox" data-setting="customVideo.like"><span>Al dar «me gusta»</span></label>
+              <input type="file" id="video-like-file" accept=".mp4,.webm,video/mp4,video/webm">
+              <div class="row gap top-gap"><button class="btn tiny ghost" data-video-play="like">Vista previa</button><button class="btn tiny ghost" data-video-remove="like">Quitar</button></div>
+              <p class="hint" id="video-like-status">Sin vídeo cargado.</p>
+            </div>
+          </div>
+          <label class="field top-gap">Quitar fondo del vídeo
+            <select data-setting="customVideo.chroma"><option value="none">No quitar fondo</option><option value="green">Verde</option><option value="blue">Azul</option></select>
+          </label>
+          <label class="switch top-gap"><input type="checkbox" data-setting="customVideo.sound"><span>Reproducir también el sonido del vídeo</span></label>
+          <div id="video-preview" class="video-preview" aria-label="Vista previa del vídeo"></div>
+          <p class="hint">Si usas también un MP3/WAV para el mismo evento, sonarán ambos: desactiva su audio o desmarca el sonido del vídeo para evitar duplicación. El chroma funciona mejor con fondo uniforme. La vista previa no activa el vídeo en el directo.</p>
+        </div>
+      </section>
+
+      <!-- =========================== MINECRAFT ============================ -->
+      <section class="view" id="view-minecraft">
+        <div class="view-head">
+          <div>
+            <h1>Minecraft</h1>
+            <p>Conecta los eventos de TikTok con tu mundo de prueba de Minecraft Java 1.16.1 o 26.3.</p>
+          </div>
+        </div>
+
+        <div class="minecraft-intro" aria-label="Guía rápida de Minecraft">
+          <div class="minecraft-intro-copy">
+            <span class="minecraft-intro-kicker">ZHEZHI × MINECRAFT · MUNDO DE PRUEBA</span>
+            <strong>Tu directo cobra vida en el juego.</strong>
+            <span>Regalos, likes, seguidores y comentarios pueden invocar mobs. Tú decides cuándo y cuántos.</span>
+          </div>
+          <div class="minecraft-intro-mark" aria-hidden="true"><span>✦</span><small>JAVA · FABRIC</small></div>
+        </div>
+
+        <div class="card minecraft-bridge">
+          <div class="card-eyebrow">Conexión local · Fabric 1.16.1 / 26.3</div>
+          <h2>Puente de Minecraft</h2>
+          <p class="hint">Abre una copia de Minecraft con el mod instalado y entra en un mundo individual. La instancia original no se modifica. Las reglas no actúan si Minecraft no está conectado o Zhezhi está en pausa.</p>
+          <label class="switch big"><input type="checkbox" data-setting="minecraft.enabled"><span>Permitir acciones en Minecraft</span></label>
+          <div class="minecraft-connection" data-state="checking" role="status" aria-live="polite">
+            <span class="minecraft-connection-icon" aria-hidden="true"></span>
+            <div><strong id="minecraft-connection-label">Comprobando puente</strong><p id="minecraft-status">Comprobando conexión con Minecraft…</p></div>
+          </div>
+          <p class="hint">Las acciones clásicas (velocidad, zombi por regalo y día/noche) se configuran en <a href="#overlay">Overlay → Acciones de espectadores</a> y requieren activar sus casillas. Las reglas de mobs de abajo son independientes; si activas una regla de regalo, sustituye al zombi clásico para evitar apariciones duplicadas.</p>
+        </div>
+
+        <div class="card minecraft-rules-card">
+          <div class="row space minecraft-rules-heading">
+            <div>
+              <div class="card-eyebrow">Eventos de TikTok</div>
+              <h2>Reglas de mobs</h2>
+              <span class="minecraft-rule-total" id="minecraft-rule-total">0 / 12 acciones</span>
+            </div>
+            <button class="btn" id="btn-add-mob-rule" type="button">+ Crear acción</button>
+          </div>
+          <p class="hint">Elige me gusta, regalo, seguimiento o comentario (exacto o cualquiera), el mob, cuántos aparecen (hasta 20 mobs o 5 jefes) y el nombre que llevarán. Para una rosa concreta, elige «Regalo» y escribe <strong>Rosa</strong> en «Nombre del regalo». Cada regla nueva se crea <strong>apagada</strong>: configúrala antes de activarla.</p>
+          <p class="hint" id="minecraft-rules-message" role="status"></p>
+          <div id="minecraft-mob-rules" class="list"></div>
+          <p class="hint minecraft-safety">Hasta 12 reglas y <strong>20 mobs en total por evento y por consulta del mod</strong>; hay un tiempo mínimo entre apariciones. Puedes elegir entre más de 40 mobs hostiles, pasivos y neutrales. Los comentarios solo se usan como texto o condición, <strong>nunca como comandos</strong>. Evita un demo rápido con mobs activados.</p>
+          <p class="hint minecraft-safety"><strong>Jefes (solo mundos copiados):</strong> Wither y dragón pueden destruir construcciones; el dragón también se puede intentar generar fuera del End. El guardián anciano necesita agua profunda; Warden solo existe en 26.3. Hasta <strong>5 jefes por evento y por consulta</strong>, dentro del máximo total de 20 mobs. <strong>Se recomiendan 60 segundos o más</strong> entre apariciones, pero puedes editar el enfriamiento. «Cualquier comentario» puede activarse con mucho chat: úsalo con prudencia.</p>
+          <p class="hint minecraft-safety"><strong>Explosivos (solo mundos copiados):</strong> TNT encendida (mecha de ~4 s), cristal del End que explota al recibir daño y cristal que se detona solo tras ~2 s. Hasta <strong>20 explosivos por evento y por consulta</strong>, independientes del límite de mobs. Puedes editar su cantidad y enfriamiento; se recomiendan 30 s o más. <strong>Las explosiones destruyen bloques y pueden encadenarse.</strong> Las reglas nuevas empiezan apagadas.</p>
+        </div>
+
+        <div class="card minecraft-install">
+          <div class="card-eyebrow">Instalación local · PrismLauncher</div>
+          <h2>Dónde está el mod y cómo instalarlo</h2>
+          <p class="hint">Con Minecraft cerrado, busca el <code>.jar</code> en la carpeta del proyecto Zhezhi y cópialo a <code>minecraft/mods</code> de <strong>una copia</strong> de la instancia correspondiente. En PrismLauncher, haz clic derecho en la instancia y abre su carpeta; desde allí entra en <code>minecraft/mods</code>. No mezcles los dos mods ni modifiques tu instancia original.</p>
+          <div class="minecraft-install-grid">
+            <div class="minecraft-install-version">
+              <strong>Minecraft Java 1.16.1 <span>Fabric</span></strong>
+              <span class="minecraft-path-label">Origen · dentro de la carpeta de Zhezhi</span>
+              <code>minecraft-1.16.1/build/libs/zhezhi-minecraft-1161-0.1.0.jar</code>
+              <span class="minecraft-path-label">Destino · dentro de la instancia Fabric 1.16.1 copiada</span>
+              <code>minecraft/mods/</code>
+            </div>
+            <div class="minecraft-install-version">
+              <strong>Minecraft Java 26.3 <span>Fabric</span></strong>
+              <span class="minecraft-path-label">Origen · dentro de la carpeta de Zhezhi</span>
+              <code>minecraft-26.3/build/libs/zhezhi-minecraft-263-0.1.0.jar</code>
+              <span class="minecraft-path-label">Destino · dentro de la instancia Fabric 26.3 copiada</span>
+              <code>minecraft/mods/</code>
+            </div>
+          </div>
+          <p class="hint minecraft-install-note">Los mods no están publicados para descargar. Si los <code>.jar</code> no vienen con tu copia del proyecto, tendrás que compilarlos siguiendo los README de <code>minecraft-1.16.1/</code> y <code>minecraft-26.3/</code>, o pedir los archivos ya compilados a quien te compartió Zhezhi. Inicia <strong>solo una</strong> instancia de prueba con un mundo copiado.</p>
         </div>
       </section>
 
@@ -700,6 +988,7 @@
               <button class="btn ghost small" data-open-overlay="full">Abrir completo</button>
               <button class="btn ghost small" data-open-overlay="alerts">Solo alertas</button>
               <button class="btn ghost small" data-open-overlay="chat">Solo chat</button>
+              <button class="btn ghost small" data-open-overlay="goal">Metas</button>
             </div>
           </div>
 
@@ -713,6 +1002,31 @@
               <li>La voz usa Edge o Windows; el texto sale de tu equipo solo si eliges Edge.</li>
             </ul>
             <p class="hint">Versión <span id="version-label">0.1.4</span> · Node <span id="node-label">—</span></p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <div class="card-eyebrow">Copia de seguridad</div>
+            <h2>Exportar e importar ajustes</h2>
+            <p class="hint">El archivo incluye la configuración visual, metas, reglas y preferencias. Nunca incluye la clave de firma, la cookie de sesión ni la clave de IA.</p>
+            <div class="row gap wrap">
+              <button class="btn" id="btn-export-config">Exportar configuración</button>
+              <button class="btn ghost" id="btn-import-config">Importar archivo…</button>
+              <input type="file" id="import-config-file" accept=".json,application/json" hidden>
+            </div>
+            <p class="hint" id="backup-status">Los secretos actuales se conservan al importar.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-eyebrow">Atajos</div>
+            <h2>Control rápido</h2>
+            <ul class="plain">
+              <li><code>Alt</code> + <code>P</code> pausa o reanuda alertas, sonidos y voz.</li>
+              <li>El botón <strong>Pausar</strong> de la barra superior hace lo mismo.</li>
+              <li>La pausa no detiene el chat ni los contadores: solo silencia la salida.</li>
+            </ul>
+            <p class="hint">Al reanudar no se acumulan las alertas antiguas. Muy útil para un descanso sin perder el hilo del directo.</p>
           </div>
         </div>
       </section>

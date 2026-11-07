@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="petalFill" x1="6" y1="3" x2="18" y2="21" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffdbe6"/>
+      <stop offset=".55" stop-color="#f0a9bf"/>
+      <stop offset="1" stop-color="#c87d95"/>
+    </linearGradient>
+  </defs>
+  <path d="M12 2.2c4.3 3.5 6.5 7.5 6.5 11.4 0 4.6-2.9 8.6-6.5 8.6s-6.5-4-6.5-8.6c0-3.9 2.2-7.9 6.5-11.4Z" fill="url(#petalFill)"/>
+  <path d="M12 6.5v11" stroke="#b4667f" stroke-opacity=".35" stroke-width=".7" stroke-linecap="round"/>
+</svg>
